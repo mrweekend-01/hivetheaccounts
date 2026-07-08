@@ -1,0 +1,78 @@
+# docker-compose PARA LA PC DE ROBERTO (o cualquier PC que solo corre la app,
+# sin tocar código). No construye nada: descarga las imágenes ya armadas por
+# GitHub Actions y las mantiene actualizadas solas con Watchtower.
+#
+# Uso:
+#   1) copiar .env.prod.example a .env.prod y completar los valores
+#   2) docker login ghcr.io -u TU_USUARIO_GITHUB   (una sola vez, pide un token)
+#   3) docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#
+# De ahí en adelante no hay que hacer nada más: Watchtower revisa cada rato
+# si Álvaro publicó una versión nueva y reinicia los contenedores solo.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hth_accounts_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ghcr.io/${IMAGE_BASE}-backend:latest
+    container_name: hth_accounts_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      FERNET_KEY: ${FERNET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      HUMANIZATION_MINUTES: ${HUMANIZATION_MINUTES}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m app.seed &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  frontend:
+    image: ghcr.io/${IMAGE_BASE}-frontend:latest
+    container_name: hth_accounts_web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # esta es la URL con la que el NAVEGADOR de cada operador llega al
+      # backend -- normalmente la IP de la PC de Roberto en su red local
+      API_URL: ${API_URL}
+    ports:
+      - "80:80"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: hth_watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_CONFIG:-~/.docker}/config.json:/config.json:ro
+    environment:
+      WATCHTOWER_CLEANUP: "true"        # borra las imágenes viejas tras actualizar
+      WATCHTOWER_POLL_INTERVAL: "300"   # revisa cada 5 minutos si hay versión nueva
+      WATCHTOWER_LABEL_ENABLE: "false"
+    command: hth_accounts_api hth_accounts_web
+
+volumes:
+  pgdata:
