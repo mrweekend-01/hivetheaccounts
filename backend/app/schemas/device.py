@@ -7,6 +7,7 @@ from app.schemas.proxy import ProxyOut
 class DeviceBase(BaseModel):
     name: str
     nickname: str | None = None
+    boxphone: str | None = None
     status: Status = Status.activo
     notes: str | None = None
 
@@ -18,6 +19,7 @@ class DeviceCreate(DeviceBase):
 class DeviceUpdate(BaseModel):
     name: str | None = None
     nickname: str | None = None
+    boxphone: str | None = None
     status: Status | None = None
     notes: str | None = None
     proxy_id: int | None = None
