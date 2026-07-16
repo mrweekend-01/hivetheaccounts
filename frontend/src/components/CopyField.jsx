@@ -20,9 +20,9 @@ export default function CopyField({ label, value, mono = true }) {
       <button onClick={copy} disabled={!value}
         className="w-full group flex items-center justify-between gap-2 rounded-md
                    bg-hive-bg border border-hive-border px-3 py-2 text-left
-                   hover:border-hive-amber transition-colors disabled:hover:border-hive-border">
+                   hover:border-hive-accent transition-colors disabled:hover:border-hive-border">
         <span className={`truncate ${mono ? "font-mono" : ""} text-sm`}>{shown}</span>
-        <span className={`text-xs shrink-0 ${copied ? "text-ok" : "text-hive-muted group-hover:text-hive-amber"}`}>
+        <span className={`text-xs shrink-0 ${copied ? "text-ok" : "text-hive-muted group-hover:text-hive-accent"}`}>
           {copied ? "copiado ✓" : "copiar"}
         </span>
       </button>

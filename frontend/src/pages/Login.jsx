@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import BrandMark from "../components/BrandMark";
 
 export default function Login() {
   const { login, user } = useAuth();
@@ -26,8 +27,8 @@ export default function Login() {
   return (
     <div className="min-h-screen grid place-items-center px-4">
       <form onSubmit={submit} className="card p-8 w-full max-w-sm">
-        <div className="flex items-center gap-2 text-xl font-bold mb-1">
-          <span className="text-hive-amber">▲</span> Hack the Accounts
+        <div className="flex items-center gap-2 font-mono font-extrabold uppercase tracking-wide text-lg mb-1">
+          <BrandMark size={26} /> Hack the Accounts
         </div>
         <p className="text-hive-muted text-sm mb-6">Acceso interno HTH</p>
         <label className="label">Usuario</label>

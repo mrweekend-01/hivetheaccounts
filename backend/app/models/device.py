@@ -13,6 +13,7 @@ class Device(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(80), unique=True, nullable=False)  # "CEL 1"
     nickname = Column(String(20))  # alias corto usado en reportes, ej "9KL"
+    boxphone = Column(String(80))  # caja física del phone farm que agrupa este celular, ej "Boxphone 1"
     # unique=True fuerza 1:1 -> un proxy no puede repetirse entre celulares
     proxy_id = Column(Integer, ForeignKey("proxies.id", ondelete="SET NULL"),
                       unique=True)

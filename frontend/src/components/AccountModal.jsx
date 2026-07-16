@@ -46,7 +46,7 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
 
         <div className="space-y-4">
           <div>
-            <div className="text-xs font-semibold text-hive-amber uppercase mb-2">Correo de respaldo</div>
+            <div className="text-xs font-semibold text-hive-accent uppercase mb-2">Correo de respaldo</div>
             <div className="grid grid-cols-2 gap-3">
               <CopyField label="Correo" value={data.corporate_email} />
               {can.reveal && <CopyField label="Contraseña" value={data.corp_password} />}
@@ -55,10 +55,10 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
 
           {data.socials.map((s) => (
             <div key={s.id}>
-              <div className="text-xs font-semibold text-hive-amber uppercase mb-2 flex items-center gap-2">
+              <div className="text-xs font-semibold text-hive-accent uppercase mb-2 flex items-center gap-2">
                 {s.platform} <StatusBadge status={s.status} />
                 {s.slot_number != null && <span className="chip bg-hive-panel2 text-hive-muted normal-case">slot {s.slot_number}</span>}
-                {!s.username && <span className="chip bg-warn/15 text-warn normal-case">pendiente de credenciales</span>}
+                {!s.username && <span className="plate work normal-case"><span className="dot" />pendiente de credenciales</span>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <CopyField label="Usuario" value={s.username} />
@@ -70,7 +70,7 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
 
           {proxy && (
             <div>
-              <div className="text-xs font-semibold text-hive-amber uppercase mb-2">Proxy del celular</div>
+              <div className="text-xs font-semibold text-hive-accent uppercase mb-2">Proxy del celular</div>
               <div className="grid grid-cols-2 gap-3">
                 <CopyField label="IP" value={proxy.ip} />
                 <CopyField label="Puerto" value={String(proxy.port)} />

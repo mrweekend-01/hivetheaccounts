@@ -1,5 +1,5 @@
 from sqlalchemy import (Column, Integer, String, Text, Date, DateTime,
-                        ForeignKey, Enum as SAEnum)
+                        ForeignKey, Enum as SAEnum, JSON)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -23,6 +23,7 @@ class Account(Base):
     profile_name = Column(String(150))       # "Nombre" en el Excel
     birth_date = Column(Date)                # "Fecha de Nacimiento"
     sequence_number = Column(Integer)        # contador/orden original del Excel
+    traits = Column(JSON, nullable=False, default=list, server_default="[]")
 
     device_id = Column(Integer, ForeignKey("devices.id", ondelete="SET NULL"),
                        index=True)

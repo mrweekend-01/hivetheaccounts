@@ -2,12 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+:root { color-scheme: light; }
 
 body {
   margin: 0;
-  background: #0d0f12;
-  color: #e6e8ec;
+  background: #f4f5f7;
+  color: #1b1e24;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -16,16 +16,90 @@ body {
     @apply inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium
            transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
   }
-  .btn-primary { @apply btn bg-hive-amber text-black hover:bg-hive-amberdim; }
+  .btn-primary { @apply btn bg-hive-accent text-white hover:bg-hive-accentdim; }
   .btn-ghost   { @apply btn bg-hive-panel2 text-hive-text hover:bg-hive-border; }
   .btn-danger  { @apply btn bg-bad/90 text-white hover:bg-bad; }
 
   .input {
     @apply w-full rounded-md bg-hive-bg border border-hive-border px-3 py-2 text-sm
            text-hive-text placeholder-hive-muted focus:outline-none
-           focus:border-hive-amber;
+           focus:border-hive-accent;
   }
   .label { @apply block text-xs font-medium text-hive-muted mb-1; }
-  .card  { @apply bg-hive-panel border border-hive-border rounded-lg; }
-  .chip  { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium; }
+  .card  { @apply bg-hive-panel border border-hive-border rounded-lg shadow-sm; }
+  .chip  { @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium; }
+
+  /* page-level heading: mono promovido a rol de titular (mayúsculas, tracking) */
+  .page-title { @apply font-mono font-extrabold uppercase tracking-wide text-lg text-hive-text; }
+
+  /* ---- panel de operador: lámpara de estado (firma visual) ---- */
+  /* "port": estado por red social / equipo — etiqueta mono + lámpara */
+  .port {
+    @apply inline-flex items-center gap-1.5 rounded-md bg-hive-panel2 border border-hive-border
+           px-2 py-1 text-hive-muted;
+  }
+  .port .tag  { @apply font-mono text-[10px] font-bold tracking-wide; }
+  .port .lamp { @apply w-1.5 h-1.5 rounded-full bg-hive-border shrink-0; }
+  .port.go    { @apply text-ok/80; }
+  .port.go .lamp    { @apply bg-ok; }
+  .port.stop  { @apply text-bad/80; }
+  .port.stop .lamp  { @apply bg-bad; }
+  .port.work  { @apply text-warn/80; }
+  .port.work .lamp  { @apply bg-warn animate-pulse; }
+
+  /* "plate": estado general (Activo/Suspendido/…) — punto + texto neutro */
+  .plate {
+    @apply inline-flex items-center gap-1.5 rounded-md bg-hive-panel2 border border-hive-border
+           px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-hive-text;
+  }
+  .plate .dot     { @apply w-1.5 h-1.5 rounded-full shrink-0 bg-hive-muted; }
+  .plate.go .dot    { @apply bg-ok; }
+  .plate.stop .dot  { @apply bg-bad; }
+  .plate.work .dot  { @apply bg-warn; }
+  .plate.accent .dot{ @apply bg-hive-accent; }
+
+  /* "tape": características/datos descriptivos (no son un estado) */
+  .tape {
+    @apply inline-flex items-center gap-1.5 font-mono text-xs border-l-2 border-hive-accent
+           bg-hive-panel2 text-hive-text px-2.5 py-1;
+  }
+
+  /* "beacon": el botón grande de Humanización — la única acción con neón de la app.
+     Todo lo demás (port/plate) se queda sobrio; esto es el CTA que hay que notar.
+     Rectángulo horizontal: etiqueta de red a la izquierda, estado a la derecha.
+     Ancho fijo (no w-full): las 3 redes viven en una fila, no en una columna. */
+  .beacon {
+    @apply relative flex items-center justify-between gap-2 rounded-xl
+           w-28 h-12 px-3 bg-hive-panel2 border border-hive-border text-hive-muted
+           transition-transform disabled:opacity-50;
+  }
+  .beacon .tag   { @apply font-mono text-xs font-bold tracking-wide; }
+  .beacon .state { @apply font-mono text-xs font-semibold tabular-nums; }
+  .beacon.stop {
+    @apply border-bad text-bad bg-bad/5 cursor-pointer hover:scale-[1.02] active:scale-[0.98];
+    animation: breathe-stop 2.2s ease-in-out infinite;
+  }
+  .beacon.work {
+    @apply border-warn text-warn bg-warn/5;
+    animation: breathe-work 2.2s ease-in-out infinite;
+  }
+  .beacon.go {
+    @apply border-ok text-ok bg-ok/5;
+    box-shadow: 0 0 0 3px rgba(22,163,74,.14), 0 4px 18px -2px rgba(22,163,74,.35);
+  }
+}
+
+@keyframes breathe-stop {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(220,38,38,.14), 0 4px 16px -2px rgba(220,38,38,.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(220,38,38,.22), 0 6px 26px -2px rgba(220,38,38,.55); }
+}
+@keyframes breathe-work {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(217,119,6,.14), 0 4px 16px -2px rgba(217,119,6,.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(217,119,6,.22), 0 6px 26px -2px rgba(217,119,6,.55); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .port.work .lamp { animation: none; opacity: .85; }
+  .beacon.stop { animation: none; box-shadow: 0 0 0 3px rgba(220,38,38,.14), 0 4px 16px -2px rgba(220,38,38,.35); }
+  .beacon.work { animation: none; box-shadow: 0 0 0 3px rgba(217,119,6,.14), 0 4px 16px -2px rgba(217,119,6,.35); }
 }

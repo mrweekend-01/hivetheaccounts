@@ -3,7 +3,7 @@ import api from "../api/client";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
 
-const emptyDevice = { name: "", nickname: "", status: "activo", notes: "", proxy_id: "" };
+const emptyDevice = { name: "", nickname: "", boxphone: "", status: "activo", notes: "", proxy_id: "" };
 const emptyProxy = { label: "", provider: "", ip: "", port: "", username: "",
                      password: "", protocol: "http", status: "operativo", notes: "" };
 
@@ -49,7 +49,7 @@ export default function Devices() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Proxys por celular</h1>
+        <h1 className="page-title">Proxys por celular</h1>
         {can.edit && (
           <div className="flex gap-2">
             <button className="btn-ghost" onClick={() => setProxForm({ ...emptyProxy })}>+ Proxy</button>
@@ -65,6 +65,7 @@ export default function Devices() {
               <div className="font-semibold">
                 {d.name}
                 {d.nickname && <span className="ml-2 chip bg-hive-panel2 text-hive-muted">{d.nickname}</span>}
+                {d.boxphone && <span className="ml-2 chip bg-hive-panel2 text-hive-muted">{d.boxphone}</span>}
               </div>
               <StatusBadge status={d.status} />
             </div>
@@ -84,8 +85,8 @@ export default function Devices() {
             {can.edit && (
               <div className="flex gap-2 mt-3">
                 <button className="btn-ghost text-xs" onClick={() => setDevForm({
-                  id: d.id, name: d.name, nickname: d.nickname || "", status: d.status,
-                  notes: d.notes || "", proxy_id: d.proxy?.id || "" })}>Editar celular</button>
+                  id: d.id, name: d.name, nickname: d.nickname || "", boxphone: d.boxphone || "",
+                  status: d.status, notes: d.notes || "", proxy_id: d.proxy?.id || "" })}>Editar celular</button>
                 {d.proxy && (
                   <button className="btn-ghost text-xs" onClick={() => editProxy(d.proxy)}>Editar proxy</button>
                 )}
@@ -122,6 +123,8 @@ export default function Devices() {
           <input className="input mb-3" value={devForm.name} onChange={(e) => setDevForm({ ...devForm, name: e.target.value })} />
           <label className="label">Alias corto (opcional, ej. "9KL")</label>
           <input className="input mb-3" value={devForm.nickname} onChange={(e) => setDevForm({ ...devForm, nickname: e.target.value })} />
+          <label className="label">Boxphone (opcional, ej. "Boxphone 1")</label>
+          <input className="input mb-3" value={devForm.boxphone} onChange={(e) => setDevForm({ ...devForm, boxphone: e.target.value })} />
           <label className="label">Estado</label>
           <select className="input mb-3" value={devForm.status} onChange={(e) => setDevForm({ ...devForm, status: e.target.value })}>
             {["activo", "inactivo", "suspendido", "en_revision"].map((s) => <option key={s}>{s}</option>)}

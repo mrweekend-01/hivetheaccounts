@@ -31,7 +31,7 @@ export default function Users() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Usuarios</h1>
+        <h1 className="page-title">Usuarios</h1>
         <button className="btn-primary" onClick={() => setForm({ ...empty })}>+ Usuario</button>
       </div>
 
@@ -51,7 +51,7 @@ export default function Users() {
               <tr key={u.id} className="border-t border-hive-border">
                 <td className="px-4 py-3 font-mono">{u.username}</td>
                 <td className="px-4 py-3">{u.full_name || "—"}</td>
-                <td className="px-4 py-3"><span className="chip bg-hive-panel2 text-hive-amber uppercase">{u.role}</span></td>
+                <td className="px-4 py-3"><span className="chip bg-hive-panel2 text-hive-accent uppercase">{u.role}</span></td>
                 <td className="px-4 py-3">{u.is_active ? "sí" : "no"}</td>
                 <td className="px-4 py-3 text-right">
                   <button className="btn-ghost text-xs mr-2" onClick={() => setForm({

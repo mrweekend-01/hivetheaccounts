@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 from app.models.account import Account
+from app.models.device import Device
 from app.models.social_account import SocialAccount
 from app.core.enums import Platform, PresenceState
 from app.schemas.account import AccountCreate, AccountUpdate, SocialsPresence
@@ -22,12 +23,15 @@ def get(db: Session, account_id: int) -> Account | None:
 
 def list_accounts(db: Session, *, platform: str | None = None,
                   status: str | None = None, device_id: int | None = None,
+                  boxphone: str | None = None,
                   search: str | None = None) -> list[Account]:
     q = _query(db)
     if status:
         q = q.filter(Account.status == status)
     if device_id:
         q = q.filter(Account.device_id == device_id)
+    if boxphone:
+        q = q.filter(Account.device.has(Device.boxphone == boxphone))
     if search:
         q = q.filter(Account.corporate_email.ilike(f"%{search}%"))
     if platform:
@@ -79,6 +83,7 @@ def create(db: Session, data: AccountCreate, created_by: int | None) -> Account:
         profile_name=data.profile_name,
         birth_date=data.birth_date,
         sequence_number=data.sequence_number,
+        traits=data.traits,
         device_id=data.device_id,
         created_by=created_by,
     )

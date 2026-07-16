@@ -20,16 +20,18 @@ def _list_item(acc) -> AccountListItem:
         profile_name=acc.profile_name, status=acc.status,
         device_id=acc.device_id,
         device_name=acc.device.name if acc.device else None,
+        boxphone=acc.device.boxphone if acc.device else None,
         socials=crud.socials_presence(acc),
     )
 
 
 @router.get("", response_model=list[AccountListItem])
 def list_accounts(platform: str | None = None, status: str | None = None,
-                  device_id: int | None = None, search: str | None = None,
+                  device_id: int | None = None, boxphone: str | None = None,
+                  search: str | None = None,
                   db: Session = Depends(get_db), _=Depends(get_current_user)):
     rows = crud.list_accounts(db, platform=platform, status=status,
-                              device_id=device_id, search=search)
+                              device_id=device_id, boxphone=boxphone, search=search)
     return [_list_item(a) for a in rows]
 
 
@@ -48,8 +50,9 @@ def get_account(account_id: int, reveal: bool = False,
         id=acc.id, corporate_email=acc.corporate_email, status=acc.status,
         notes=acc.notes, device_id=acc.device_id,
         device_name=acc.device.name if acc.device else None,
+        boxphone=acc.device.boxphone if acc.device else None,
         profile_name=acc.profile_name, birth_date=acc.birth_date,
-        sequence_number=acc.sequence_number,
+        sequence_number=acc.sequence_number, traits=acc.traits or [],
         created_at=acc.created_at, socials=[], proxy=None,
     )
     for sa in acc.social_accounts:

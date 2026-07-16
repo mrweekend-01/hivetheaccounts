@@ -1,16 +1,21 @@
 const MAP = {
-  activo:      { c: "bg-ok/15 text-ok", t: "Activo" },
-  inactivo:    { c: "bg-hive-panel2 text-hive-muted", t: "Inactivo" },
-  suspendido:  { c: "bg-bad/15 text-bad", t: "Suspendido" },
-  en_revision: { c: "bg-warn/15 text-warn", t: "En revisión" },
-  operativo:   { c: "bg-ok/15 text-ok", t: "Operativo" },
-  inoperativo: { c: "bg-bad/15 text-bad", t: "Inoperativo" },
-  pendiente:   { c: "bg-hive-panel2 text-hive-muted", t: "Pendiente" },
-  en_proceso:  { c: "bg-warn/15 text-warn", t: "En proceso" },
-  hecho:       { c: "bg-ok/15 text-ok", t: "Hecho" },
+  activo:      { c: "go", t: "Activo" },
+  inactivo:    { c: "", t: "Inactivo" },
+  suspendido:  { c: "stop", t: "Suspendido" },
+  en_revision: { c: "work", t: "En revisión" },
+  operativo:   { c: "go", t: "Operativo" },
+  inoperativo: { c: "stop", t: "Inoperativo" },
+  pendiente:   { c: "", t: "Pendiente" },
+  en_proceso:  { c: "work", t: "En proceso" },
+  hecho:       { c: "go", t: "Hecho" },
 };
 
 export default function StatusBadge({ status }) {
-  const s = MAP[status] || { c: "bg-hive-panel2 text-hive-muted", t: status };
-  return <span className={`chip ${s.c}`}>{s.t}</span>;
+  const s = MAP[status] || { c: "", t: status };
+  return (
+    <span className={`plate ${s.c}`}>
+      <span className="dot" />
+      {s.t}
+    </span>
+  );
 }

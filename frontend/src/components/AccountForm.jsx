@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/client";
+import TraitsInput from "./TraitsInput";
 
 const PLATFORMS = ["facebook", "instagram", "tiktok"];
 const STATUSES = ["activo", "inactivo", "suspendido", "en_revision"];
@@ -15,6 +16,7 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
   const [profileName, setProfileName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [seqNumber, setSeqNumber] = useState("");
+  const [traits, setTraits] = useState([]);
   const [socials, setSocials] = useState({}); // {platform: {username, password, slot_number, profile_url, two_fa_secret}}
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,6 +33,7 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
       setProfileName(d.profile_name || "");
       setBirthDate(d.birth_date || "");
       setSeqNumber(d.sequence_number ?? "");
+      setTraits(d.traits || []);
       const s = {};
       d.socials.forEach((sa) => {
         s[sa.platform] = {
@@ -66,6 +69,7 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
       profile_name: profileName || null,
       birth_date: birthDate || null,
       sequence_number: seqNumber !== "" ? Number(seqNumber) : null,
+      traits,
       socials: socialsPayload,
     };
     if (!editing) body.corp_password = pass;
@@ -90,7 +94,7 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
         <label className="label">Contraseña del correo {editing && "(vacío = no cambiar)"}</label>
         <input className="input mb-3" value={pass} onChange={(e) => setPass(e.target.value)} />
 
-        <div className="text-xs font-semibold text-hive-amber uppercase mt-2 mb-2">Identidad del perfil</div>
+        <div className="text-xs font-semibold text-hive-accent uppercase mt-2 mb-2">Identidad del perfil</div>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div className="col-span-2">
             <label className="label">Nombre del perfil</label>
@@ -104,6 +108,11 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
             <label className="label">Número de orden</label>
             <input className="input" type="number" value={seqNumber} onChange={(e) => setSeqNumber(e.target.value)} />
           </div>
+        </div>
+
+        <label className="label">Características</label>
+        <div className="mb-3">
+          <TraitsInput value={traits} onChange={setTraits} />
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-3">

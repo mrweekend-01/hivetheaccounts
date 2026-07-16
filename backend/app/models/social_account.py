@@ -34,6 +34,12 @@ class SocialAccount(Base):
         default=HumanizationStatus.pendiente, index=True)
     humanization_started_at = Column(DateTime(timezone=True))
     humanization_done_at = Column(DateTime(timezone=True))
+    # snapshot de AppSettings.humanization_minutes al momento de iniciar: así un
+    # cambio del ajuste global no afecta timers que ya estaban corriendo
+    humanization_duration_minutes = Column(Integer)
+    # referencia histórica: última vez que se humanizó esta red, sobrevive a los
+    # reinicios (a diferencia de humanization_done_at, que sí se borra)
+    last_humanized_at = Column(DateTime(timezone=True))
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

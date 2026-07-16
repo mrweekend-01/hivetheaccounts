@@ -12,7 +12,7 @@ export default function Accounts() {
   const { can } = useAuth();
   const [rows, setRows] = useState([]);
   const [devices, setDevices] = useState([]);
-  const [f, setF] = useState({ platform: "", status: "", device_id: "", search: "" });
+  const [f, setF] = useState({ platform: "", status: "", device_id: "", boxphone: "", search: "" });
   const [openId, setOpenId] = useState(null);
   const [formFor, setFormFor] = useState(undefined); // undefined=cerrado, null=nuevo, obj=editar
 
@@ -23,6 +23,8 @@ export default function Accounts() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { api.get("/devices").then((r) => setDevices(r.data)); }, []);
+
+  const boxphones = [...new Set(devices.map((d) => d.boxphone).filter(Boolean))].sort();
 
   function exportFile(kind) {
     const params = new URLSearchParams(Object.entries(f).filter(([, v]) => v));
@@ -41,7 +43,7 @@ export default function Accounts() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Cuentas <span className="text-hive-muted text-sm">({rows.length})</span></h1>
+        <h1 className="page-title">Cuentas <span className="text-hive-muted text-sm normal-case tracking-normal font-sans font-semibold">({rows.length})</span></h1>
         <div className="flex gap-2">
           <button className="btn-ghost" onClick={() => exportFile("xlsx")}>Exportar Excel</button>
           <button className="btn-ghost" onClick={() => exportFile("csv")}>Exportar CSV</button>
@@ -70,6 +72,10 @@ export default function Accounts() {
           <option value="">Todos los celulares</option>
           {devices.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
+        <select className="input w-auto" value={f.boxphone} onChange={(e) => setF({ ...f, boxphone: e.target.value })}>
+          <option value="">Todos los boxphones</option>
+          {boxphones.map((b) => <option key={b} value={b}>{b}</option>)}
+        </select>
       </div>
 
       {/* Tabla */}
@@ -79,6 +85,7 @@ export default function Accounts() {
             <tr>
               <th className="text-left px-4 py-2.5 font-medium">Perfil</th>
               <th className="text-left px-4 py-2.5 font-medium">Celular</th>
+              <th className="text-left px-4 py-2.5 font-medium">Boxphone</th>
               <th className="text-left px-4 py-2.5 font-medium">Estado</th>
               <th className="text-left px-4 py-2.5 font-medium">Redes</th>
             </tr>
@@ -92,12 +99,13 @@ export default function Accounts() {
                   <div className="font-mono text-xs text-hive-muted">{r.corporate_email}</div>
                 </td>
                 <td className="px-4 py-3 text-hive-muted">{r.device_name || "—"}</td>
+                <td className="px-4 py-3 text-hive-muted">{r.boxphone || "—"}</td>
                 <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                 <td className="px-4 py-3"><SocialDots socials={r.socials} /></td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-hive-muted">
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-hive-muted">
                 No hay cuentas todavía. {can.edit && "Crea la primera con “Nueva cuenta”."}</td></tr>
             )}
           </tbody>

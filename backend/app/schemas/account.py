@@ -20,6 +20,7 @@ class AccountListItem(BaseModel):
     status: Status
     device_id: int | None = None
     device_name: str | None = None
+    boxphone: str | None = None
     socials: SocialsPresence
 
 
@@ -32,6 +33,7 @@ class AccountCreate(BaseModel):
     profile_name: str | None = None
     birth_date: date | None = None
     sequence_number: int | None = None
+    traits: list[str] = []
     socials: list[SocialAccountCreate] = []
 
 
@@ -44,6 +46,7 @@ class AccountUpdate(BaseModel):
     profile_name: str | None = None
     birth_date: date | None = None
     sequence_number: int | None = None
+    traits: list[str] | None = None
     # reemplaza el set de redes si se envía (None = no tocar)
     socials: list[SocialAccountCreate] | None = None
 
@@ -59,8 +62,10 @@ class AccountDetail(BaseModel):
     profile_name: str | None = None
     birth_date: date | None = None
     sequence_number: int | None = None
+    traits: list[str] = []
     device_id: int | None = None
     device_name: str | None = None
+    boxphone: str | None = None        # heredado del device
     proxy: ProxyReveal | None = None   # proxy heredada del device
     socials: list[SocialAccountReveal] = []
     created_at: datetime | None = None
