@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.core.enums import Role
 from app.crud import task as crud
 from app.schemas.task import TaskDetail, TaskHistoryItem
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_roles
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -58,6 +59,15 @@ def update_link(task_id: int, data: LinkUpdate, db: Session = Depends(get_db),
         raise HTTPException(404, "Tarea no encontrada")
     crud.update_link(db, task_id, data.link)
     return _detail(db, task_id)
+
+
+@router.delete("/{task_id}", status_code=204)
+def delete_task(task_id: int, db: Session = Depends(get_db),
+                _=Depends(require_roles(Role.admin))):
+    task = crud.get_task(db, task_id)
+    if not task:
+        raise HTTPException(404, "Tarea no encontrada")
+    crud.delete_task(db, task)
 
 
 @router.patch("/{task_id}/actions/{social_account_id}", response_model=TaskDetail)

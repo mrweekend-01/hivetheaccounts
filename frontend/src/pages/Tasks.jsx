@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client";
 import TaskPersonaRows from "../components/TaskPersonaRows";
+import { useAuth } from "../context/AuthContext";
 
 function fmtDate(iso) {
   if (!iso) return "—";
@@ -26,6 +27,7 @@ function progress(item) {
 }
 
 export default function Tasks() {
+  const { can } = useAuth();
   const [view, setView] = useState("list");   // "list" | "detail"
   const [list, setList] = useState([]);
   const [detail, setDetail] = useState(null);
@@ -82,6 +84,14 @@ export default function Tasks() {
     setDetail(r.data);
   }
 
+  async function handleDelete(e, id) {
+    e.stopPropagation();
+    if (!confirm("¿Eliminar esta tarea? Se perderá todo su progreso y no se puede deshacer."))
+      return;
+    await api.delete(`/tasks/${id}`);
+    setList((prev) => prev.filter((t) => t.id !== id));
+  }
+
   async function handleResetChecklist() {
     if (!confirm("¿Reiniciar el checklist de esta tarea? Se borrará todo el progreso marcado."))
       return;
@@ -106,8 +116,8 @@ export default function Tasks() {
             {list.map((t) => {
               const { pct, label, cls } = progress(t);
               return (
-                <button key={t.id} onClick={() => openDetail(t.id)}
-                  className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-hive-panel2/60">
+                <div key={t.id} onClick={() => openDetail(t.id)} role="button" tabIndex={0}
+                  className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-hive-panel2/60 cursor-pointer">
                   <span className="font-mono text-sm text-hive-text truncate flex-1 min-w-0"
                     title={t.link}>
                     {truncateLink(t.link)}
@@ -125,7 +135,13 @@ export default function Tasks() {
                       {label}
                     </span>
                   </div>
-                </button>
+                  {can.admin && (
+                    <button type="button" className="btn-ghost text-xs px-2 py-1.5 text-bad hover:bg-bad/10 shrink-0"
+                      title="Eliminar tarea" onClick={(e) => handleDelete(e, t.id)}>
+                      🗑
+                    </button>
+                  )}
+                </div>
               );
             })}
             {list.length === 0 && (

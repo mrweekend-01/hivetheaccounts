@@ -32,6 +32,11 @@ def update_link(db: Session, task_id: int, link: str) -> Task:
     return task
 
 
+def delete_task(db: Session, task: Task) -> None:
+    db.delete(task)   # cascada por FK: borra también sus task_actions
+    db.commit()
+
+
 # ---------------- acciones ----------------
 
 def toggle_action(db: Session, task_id: int, social_account_id: int,
