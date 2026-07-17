@@ -97,6 +97,14 @@ export default function Humanization() {
     await api.post(`/humanization/${id}/start`);
     load();
   }
+  async function pause(id) {
+    await api.post(`/humanization/${id}/pause`);
+    load();
+  }
+  async function resume(id) {
+    await api.post(`/humanization/${id}/resume`);
+    load();
+  }
   async function reset(deviceId) {
     if (!confirm("¿Reiniciar humanización? Todos los estados vuelven a pendiente.")) return;
     await api.post("/humanization/reset", null, { params: deviceId ? { device_id: deviceId } : {} });
@@ -188,7 +196,9 @@ export default function Humanization() {
                         return (
                           <HumanizationSocialIcon key={s.platform} platform={s.platform} state={state}
                             remainingSeconds={remaining}
-                            onStart={s.social_account_id != null ? () => start(s.social_account_id) : undefined} />
+                            onStart={s.social_account_id != null ? () => start(s.social_account_id) : undefined}
+                            onPause={s.social_account_id != null ? () => pause(s.social_account_id) : undefined}
+                            onResume={s.social_account_id != null ? () => resume(s.social_account_id) : undefined} />
                         );
                       })}
                     </div>

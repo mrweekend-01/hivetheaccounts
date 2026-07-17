@@ -86,6 +86,26 @@ def start(social_account_id: int, db: Session = Depends(get_db),
     return {"ok": True, "remaining_seconds": sa.humanization_duration_minutes * 60}
 
 
+@router.post("/{social_account_id}/pause")
+def pause(social_account_id: int, db: Session = Depends(get_db),
+         _=Depends(get_current_user)):
+    sa = crud.get(db, social_account_id)
+    if not sa:
+        raise HTTPException(404, "Red social no encontrada")
+    sa = crud.pause_humanization(db, sa)
+    return {"ok": True, "remaining_seconds": sa.paused_remaining_seconds}
+
+
+@router.post("/{social_account_id}/resume")
+def resume(social_account_id: int, db: Session = Depends(get_db),
+          _=Depends(get_current_user)):
+    sa = crud.get(db, social_account_id)
+    if not sa:
+        raise HTTPException(404, "Red social no encontrada")
+    sa = crud.resume_humanization(db, sa)
+    return {"ok": True, "remaining_seconds": crud._remaining_seconds(db, sa)}
+
+
 @router.post("/{social_account_id}/done")
 def done(social_account_id: int, db: Session = Depends(get_db),
         _=Depends(get_current_user)):

@@ -4,13 +4,15 @@ const STATE_CLASS = {
   sin_credenciales: "",
   pendiente: "stop",
   en_proceso: "work",
+  pausado: "paused",
   hecho: "go",
 };
 
 const TITLE = {
   sin_credenciales: "Sin credenciales todavía",
   pendiente: "Iniciar humanización",
-  en_proceso: "Humanizando…",
+  en_proceso: "Click para pausar",
+  pausado: "Click para reanudar",
   hecho: "Humanización hecha",
 };
 
@@ -20,19 +22,26 @@ function fmt(sec) {
 }
 
 // Botón rectangular de Humanización: pendiente respira en rojo invitando al
-// clic, en_proceso respira en ámbar mientras corre el conteo, hecho queda con
-// un brillo verde fijo, y sin_credenciales se ve apagado.
-export default function HumanizationSocialIcon({ platform, state, remainingSeconds, onStart }) {
-  const clickable = state === "pendiente" && typeof onStart === "function";
+// clic, en_proceso respira en ámbar mientras corre el conteo (clickeable para
+// pausar), pausado respira en morado más lento con el tiempo congelado
+// (clickeable para reanudar), hecho queda con un brillo verde fijo, y
+// sin_credenciales se ve apagado.
+export default function HumanizationSocialIcon({ platform, state, remainingSeconds, onStart, onPause, onResume }) {
+  const action = state === "pendiente" ? onStart
+    : state === "en_proceso" ? onPause
+    : state === "pausado" ? onResume
+    : undefined;
+  const clickable = typeof action === "function";
   return (
     <button type="button" disabled={!clickable} title={TITLE[state]}
-      onClick={clickable ? onStart : undefined}
+      onClick={clickable ? action : undefined}
       className={`beacon ${STATE_CLASS[state]} ${clickable ? "" : "cursor-default"}`}>
       <span className="tag">{PLATFORM_LABEL[platform]}</span>
       <span className="state">
         {state === "sin_credenciales" && "–"}
         {state === "pendiente" && "Iniciar"}
         {state === "en_proceso" && fmt(remainingSeconds)}
+        {state === "pausado" && fmt(remainingSeconds)}
         {state === "hecho" && "✓ Hecho"}
       </span>
     </button>

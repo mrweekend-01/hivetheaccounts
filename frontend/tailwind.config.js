@@ -18,6 +18,7 @@ export default {
         ok: "#16a34a",     // verde operativo / hecho (oscurecido para leerse en blanco)
         bad: "#dc2626",    // rojo inoperativo / faltante
         warn: "#d97706",   // en revisión / en proceso
+        paused: "#7c3aed", // morado, timer de humanización pausado a mitad de camino
       },
       fontFamily: {
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],

@@ -28,6 +28,7 @@ class Role(str, Enum):
 class HumanizationStatus(str, Enum):
     pendiente = "pendiente"    # estado de arranque
     en_proceso = "en_proceso"  # timer corriendo
+    pausado = "pausado"        # morado, timer detenido a mitad de camino
     hecho = "hecho"            # verde, terminó
 
 

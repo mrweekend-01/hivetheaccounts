@@ -1,5 +1,5 @@
 """CRUD y lógica de humanización a nivel de cada red social individual."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session, joinedload
 from app.models.social_account import SocialAccount
 from app.models.account import Account
@@ -22,6 +22,8 @@ def reveal_password(sa: SocialAccount) -> str | None:
 # ---------------- humanización ----------------
 
 def _remaining_seconds(db: Session, sa: SocialAccount) -> int:
+    if sa.humanization_status == HumanizationStatus.pausado:
+        return sa.paused_remaining_seconds or 0
     if sa.humanization_status != HumanizationStatus.en_proceso:
         return 0
     if not sa.humanization_started_at:
@@ -61,6 +63,25 @@ def start_humanization(db: Session, sa: SocialAccount) -> SocialAccount:
     return sa
 
 
+def pause_humanization(db: Session, sa: SocialAccount) -> SocialAccount:
+    sa.paused_remaining_seconds = _remaining_seconds(db, sa)
+    sa.humanization_status = HumanizationStatus.pausado
+    db.commit()
+    db.refresh(sa)
+    return sa
+
+
+def resume_humanization(db: Session, sa: SocialAccount) -> SocialAccount:
+    minutes = sa.humanization_duration_minutes or crud_settings.get_humanization_minutes(db)
+    elapsed = minutes * 60 - (sa.paused_remaining_seconds or 0)
+    sa.humanization_started_at = datetime.now(timezone.utc) - timedelta(seconds=elapsed)
+    sa.humanization_status = HumanizationStatus.en_proceso
+    sa.paused_remaining_seconds = None
+    db.commit()
+    db.refresh(sa)
+    return sa
+
+
 def finish_humanization(db: Session, sa: SocialAccount) -> SocialAccount:
     now = datetime.now(timezone.utc)
     sa.humanization_status = HumanizationStatus.hecho
@@ -80,6 +101,7 @@ def reset_humanization(db: Session, device_id: int | None = None) -> int:
         sa.humanization_status = HumanizationStatus.pendiente
         sa.humanization_started_at = None
         sa.humanization_done_at = None
+        sa.paused_remaining_seconds = None
         n += 1
     db.commit()
     return n

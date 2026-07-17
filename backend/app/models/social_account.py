@@ -36,6 +36,8 @@ class SocialAccount(Base):
     # snapshot de AppSettings.humanization_minutes al momento de iniciar: así un
     # cambio del ajuste global no afecta timers que ya estaban corriendo
     humanization_duration_minutes = Column(Integer)
+    # tiempo restante congelado mientras humanization_status == pausado
+    paused_remaining_seconds = Column(Integer, nullable=True)
     # referencia histórica: última vez que se humanizó esta red, sobrevive a los
     # reinicios (a diferencia de humanization_done_at, que sí se borra)
     last_humanized_at = Column(DateTime(timezone=True))
