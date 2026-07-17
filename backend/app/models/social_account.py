@@ -21,7 +21,6 @@ class SocialAccount(Base):
     username = Column(String(150))
     password_encrypted = Column(Text)  # cifrado Fernet
 
-    slot_number = Column(Integer)      # "Perfil #" -> slot 1-5 dentro del celular
     profile_url = Column(Text)         # link al perfil (ej. facebook.com/profile.php?id=...)
 
     status = Column(SAEnum(Status, name="social_status"),

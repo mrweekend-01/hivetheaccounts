@@ -4,9 +4,9 @@ import BrandMark from "./BrandMark";
 
 const nav = [
   { to: "/accounts", label: "Cuentas" },
-  { to: "/devices", label: "Proxys por celular" },
   { to: "/humanization", label: "Humanización" },
   { to: "/tasks", label: "Tasks" },
+  { to: "/devices", label: "Proxys por celular" },
 ];
 
 export default function Layout() {

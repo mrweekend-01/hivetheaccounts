@@ -15,7 +15,7 @@ class AccountListItem(BaseModel):
     """Fila de la tabla: sin credenciales, con semáforo de redes."""
     model_config = ConfigDict(from_attributes=True)
     id: int
-    corporate_email: str
+    corporate_email: str | None = None
     profile_name: str | None = None
     status: Status
     device_id: int | None = None
@@ -26,14 +26,13 @@ class AccountListItem(BaseModel):
 
 
 class AccountCreate(BaseModel):
-    corporate_email: EmailStr
-    corp_password: str                 # texto plano, se cifra
+    profile_name: str                  # identificador principal, obligatorio
+    corporate_email: EmailStr | None = None
+    corp_password: str | None = None   # texto plano, se cifra
     status: Status = Status.activo
     notes: str | None = None
     device_id: int | None = None
-    profile_name: str | None = None
     birth_date: date | None = None
-    sequence_number: int | None = None
     traits: list[str] = []
     socials: list[SocialAccountCreate] = []
 
@@ -46,7 +45,6 @@ class AccountUpdate(BaseModel):
     device_id: int | None = None
     profile_name: str | None = None
     birth_date: date | None = None
-    sequence_number: int | None = None
     traits: list[str] | None = None
     # reemplaza el set de redes si se envía (None = no tocar)
     socials: list[SocialAccountCreate] | None = None
@@ -56,13 +54,12 @@ class AccountDetail(BaseModel):
     """Detalle para el modal. Con reveal=true trae credenciales descifradas."""
     model_config = ConfigDict(from_attributes=True)
     id: int
-    corporate_email: str
+    corporate_email: str | None = None
     corp_password: str | None = None   # descifrada solo si reveal
     status: Status
     notes: str | None = None
     profile_name: str | None = None
     birth_date: date | None = None
-    sequence_number: int | None = None
     traits: list[str] = []
     device_id: int | None = None
     device_name: str | None = None

@@ -28,13 +28,12 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
       <div className="card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">{data.profile_name || data.corporate_email}</h3>
-            {data.profile_name && <p className="text-hive-muted text-sm font-mono">{data.corporate_email}</p>}
+            <h3 className="text-lg font-semibold">{data.profile_name}</h3>
+            {data.corporate_email && <p className="text-hive-muted text-sm font-mono">{data.corporate_email}</p>}
             <div className="flex items-center gap-2 mt-1">
               <StatusBadge status={data.status} />
               {data.device_name && <span className="chip bg-hive-panel2 text-hive-muted">{data.device_name}</span>}
               {data.birth_date && <span className="chip bg-hive-panel2 text-hive-muted">nac. {data.birth_date}</span>}
-              {data.sequence_number != null && <span className="chip bg-hive-panel2 text-hive-muted">#{data.sequence_number}</span>}
             </div>
           </div>
           <button className="text-hive-muted hover:text-hive-text text-xl leading-none" onClick={onClose}>×</button>
@@ -45,23 +44,24 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
         )}
 
         <div className="space-y-4">
-          <div>
-            <div className="text-xs font-semibold text-hive-accent uppercase mb-2">Correo de respaldo</div>
-            <div className="grid grid-cols-2 gap-3">
-              <CopyField label="Correo" value={data.corporate_email} />
-              {can.reveal && <CopyField label="Contraseña" value={data.corp_password} />}
+          {data.corporate_email && (
+            <div>
+              <div className="text-xs font-semibold text-hive-accent uppercase mb-2">Correo de respaldo</div>
+              <div className="grid grid-cols-2 gap-3">
+                <CopyField label="Correo" value={data.corporate_email} />
+                {can.reveal && <CopyField label="Contraseña" value={data.corp_password} />}
+              </div>
             </div>
-          </div>
+          )}
 
           {data.socials.map((s) => (
             <div key={s.id}>
               <div className="text-xs font-semibold text-hive-accent uppercase mb-2 flex items-center gap-2">
                 {s.platform} <StatusBadge status={s.status} />
-                {s.slot_number != null && <span className="chip bg-hive-panel2 text-hive-muted normal-case">slot {s.slot_number}</span>}
                 {!s.username && <span className="plate work normal-case"><span className="dot" />pendiente de credenciales</span>}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <CopyField label="Usuario" value={s.username} />
+                <CopyField label="Correo" value={s.username} />
                 {can.reveal && <CopyField label="Contraseña" value={s.password} />}
                 {s.profile_url && <CopyField label="Link del perfil" value={s.profile_url} mono={false} />}
               </div>

@@ -53,7 +53,7 @@ export default function Accounts() {
 
       {/* Filtros */}
       <div className="card p-3 mb-4 flex flex-wrap gap-3">
-        <input className="input flex-1 min-w-[180px]" placeholder="Buscar correo…"
+        <input className="input flex-1 min-w-[180px]" placeholder="Buscar nombre o correo…"
           value={f.search} onChange={(e) => setF({ ...f, search: e.target.value })} />
         <select className="input w-auto" value={f.platform} onChange={(e) => setF({ ...f, platform: e.target.value })}>
           <option value="">Todas las redes</option>
@@ -95,8 +95,8 @@ export default function Accounts() {
               <tr key={r.id} onClick={() => setOpenId(r.id)}
                 className="border-t border-hive-border hover:bg-hive-panel2 cursor-pointer">
                 <td className="px-4 py-3">
-                  <div className="font-medium">{r.profile_name || <span className="text-hive-muted">—</span>}</div>
-                  <div className="font-mono text-xs text-hive-muted">{r.corporate_email}</div>
+                  <div className="font-medium">{r.profile_name}</div>
+                  {r.corporate_email && <div className="font-mono text-xs text-hive-muted">{r.corporate_email}</div>}
                 </td>
                 <td className="px-4 py-3 text-hive-muted">{r.device_nickname || r.device_name || "—"}</td>
                 <td className="px-4 py-3 text-hive-muted">{r.boxphone || "—"}</td>

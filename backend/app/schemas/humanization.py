@@ -14,7 +14,7 @@ class HumanizationSocialIcon(BaseModel):
 class HumanizationPersona(BaseModel):
     account_id: int
     profile_name: str | None = None
-    corporate_email: str
+    corporate_email: str | None = None
     traits: list[str] = []
     socials: list[HumanizationSocialIcon]   # SIEMPRE 3, orden: facebook, instagram, tiktok
 

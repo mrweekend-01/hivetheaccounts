@@ -53,13 +53,13 @@ def get_account(account_id: int, reveal: bool = False,
         device_name=acc.device.name if acc.device else None,
         boxphone=acc.device.boxphone if acc.device else None,
         profile_name=acc.profile_name, birth_date=acc.birth_date,
-        sequence_number=acc.sequence_number, traits=acc.traits or [],
+        traits=acc.traits or [],
         created_at=acc.created_at, socials=[], proxy=None,
     )
     for sa in acc.social_accounts:
         detail.socials.append(SocialAccountReveal(
             id=sa.id, platform=sa.platform, username=sa.username,
-            slot_number=sa.slot_number, profile_url=sa.profile_url,
+            profile_url=sa.profile_url,
             status=sa.status, notes=sa.notes,
             humanization_status=sa.humanization_status,
             password=decrypt(sa.password_encrypted) if reveal else None,

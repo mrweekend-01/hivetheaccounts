@@ -33,10 +33,11 @@ def list_accounts(db: Session, *, platform: str | None = None,
     if boxphone:
         q = q.filter(Account.device.has(Device.boxphone == boxphone))
     if search:
-        q = q.filter(Account.corporate_email.ilike(f"%{search}%"))
+        like = f"%{search}%"
+        q = q.filter(Account.profile_name.ilike(like) | Account.corporate_email.ilike(like))
     if platform:
         q = q.filter(Account.social_accounts.any(SocialAccount.platform == platform))
-    return q.order_by(Account.corporate_email).all()
+    return q.order_by(Account.profile_name).all()
 
 
 def _presence_for(account: Account, platform: Platform) -> PresenceState:
@@ -66,7 +67,6 @@ def _apply_socials(db: Session, account: Account, socials) -> None:
         account.social_accounts.append(SocialAccount(
             platform=s.platform,
             username=s.username,
-            slot_number=s.slot_number,
             profile_url=s.profile_url,
             status=s.status,
             notes=s.notes,
@@ -82,7 +82,6 @@ def create(db: Session, data: AccountCreate, created_by: int | None) -> Account:
         notes=data.notes,
         profile_name=data.profile_name,
         birth_date=data.birth_date,
-        sequence_number=data.sequence_number,
         traits=data.traits,
         device_id=data.device_id,
         created_by=created_by,
@@ -90,7 +89,7 @@ def create(db: Session, data: AccountCreate, created_by: int | None) -> Account:
     for s in data.socials:
         account.social_accounts.append(SocialAccount(
             platform=s.platform, username=s.username, status=s.status,
-            notes=s.notes, slot_number=s.slot_number, profile_url=s.profile_url,
+            notes=s.notes, profile_url=s.profile_url,
             password_encrypted=encrypt(s.password),
         ))
     db.add(account)

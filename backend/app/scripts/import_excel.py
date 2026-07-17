@@ -194,10 +194,7 @@ def import_correos(db, wb, devices, nickname_map) -> dict[str, Account]:
                 f"revisar cuál de las dos personas es la correcta.")
         seen_emails.add(key)
 
-        sequence_number = None
-        if isinstance(num_carpeta_raw, (int, float)):
-            sequence_number = int(num_carpeta_raw)
-        elif num_carpeta_raw:
+        if num_carpeta_raw and not isinstance(num_carpeta_raw, (int, float)):
             notes_parts.append(f"Nota original (columna 'Numero de Carpeta'): {num_carpeta_raw}")
 
         birth_date = fecha_nac.date() if isinstance(fecha_nac, datetime) else None
@@ -212,7 +209,6 @@ def import_correos(db, wb, devices, nickname_map) -> dict[str, Account]:
             status=Status.activo,
             profile_name=nombre,
             birth_date=birth_date,
-            sequence_number=sequence_number,
             device_id=device.id if device else None,
             notes="; ".join(notes_parts) if notes_parts else None,
         )
@@ -236,12 +232,11 @@ def import_correos(db, wb, devices, nickname_map) -> dict[str, Account]:
 # ---------------------------------------------------------------------------
 
 def parse_facebook_row(row):
-    cel, nombre, perfil, usuario, pw, fa2, combinado, datos, estado = row
+    cel, nombre, _perfil, usuario, pw, fa2, combinado, datos, estado = row
     nombre = (nombre or "").strip() or None
-    slot = int(perfil) if perfil else None
 
     if not (nombre or usuario or combinado):
-        return None  # slot vacío, nada que importar
+        return None  # fila vacía, nada que importar
 
     if usuario and pw:
         username, password, profile_id = str(usuario), pw, None
@@ -257,7 +252,7 @@ def parse_facebook_row(row):
         return None
 
     return {
-        "device_num": parse_cel_number(cel), "nombre": nombre, "slot": slot,
+        "device_num": parse_cel_number(cel), "nombre": nombre,
         "username": username, "password": password,
         "profile_id": profile_id, "nota": datos,
     }
@@ -294,7 +289,6 @@ def import_facebook_detail(db, wb, accounts_by_email, name_to_url, id_to_name):
 
         existing_fb.username = parsed["username"]
         existing_fb.password_encrypted = encrypt(parsed["password"])
-        existing_fb.slot_number = parsed["slot"]
         existing_fb.profile_url = profile_url
         if parsed["nota"]:
             existing_fb.notes = parsed["nota"]
