@@ -6,10 +6,12 @@ const nav = [
   { to: "/accounts", label: "Cuentas" },
   { to: "/devices", label: "Proxys por celular" },
   { to: "/humanization", label: "Humanización" },
+  { to: "/tasks", label: "Tasks" },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-hive-border bg-hive-panel">

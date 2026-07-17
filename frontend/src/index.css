@@ -87,6 +87,35 @@ body {
     @apply border-ok text-ok bg-ok/5;
     box-shadow: 0 0 0 3px rgba(22,163,74,.14), 0 4px 18px -2px rgba(22,163,74,.35);
   }
+
+  /* ---- Tasks: trío de acciones (like/compartido/comentario) por red social ----
+     Reutiliza el lenguaje de "port" (mono + borde) pero como grupo de 3 casillas
+     clickeables en vez de un solo indicador, para que un vistazo a la fila diga
+     qué falta marcar. */
+  .trio-group {
+    @apply inline-flex items-center gap-1 rounded-lg border border-hive-border
+           bg-hive-panel2 px-1.5 py-1 transition-opacity;
+  }
+  .trio-group.off { @apply opacity-40; }
+  .trio-tag { @apply font-mono text-[10px] font-bold tracking-wide text-hive-muted w-5 text-center shrink-0; }
+  .trio-pill {
+    @apply font-mono text-[10px] uppercase tracking-wide rounded-md border border-hive-border
+           bg-hive-bg text-hive-muted px-1.5 py-1 transition-colors
+           disabled:cursor-not-allowed;
+  }
+  .trio-pill:not(:disabled):hover { @apply border-hive-accent text-hive-text; }
+  .trio-pill.on { @apply border-ok bg-ok/15 text-ok; }
+
+  /* ---- Tasks: barra de progreso del listado ----
+     Rojo/gris en 0%, ámbar a medias, verde al 100%: escaneable de un vistazo
+     sobre qué tareas faltan trabajar. */
+  .progress-track {
+    @apply relative h-1.5 w-28 rounded-full bg-hive-border overflow-hidden shrink-0;
+  }
+  .progress-fill { @apply absolute inset-y-0 left-0 rounded-full bg-hive-muted; }
+  .progress-fill.stop { @apply bg-bad; }
+  .progress-fill.work { @apply bg-warn; }
+  .progress-fill.go   { @apply bg-ok; }
 }
 
 @keyframes breathe-stop {

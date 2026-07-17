@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Accounts from "./pages/Accounts";
 import Devices from "./pages/Devices";
 import Humanization from "./pages/Humanization";
+import Tasks from "./pages/Tasks";
 import Users from "./pages/Users";
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/accounts" element={<Accounts />} />
         <Route path="/devices" element={<Devices />} />
         <Route path="/humanization" element={<Humanization />} />
+        <Route path="/tasks" element={<Tasks />} />
         <Route path="/users" element={<ProtectedRoute role="admin"><Users /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/accounts" replace />} />
