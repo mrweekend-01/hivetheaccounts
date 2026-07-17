@@ -16,6 +16,7 @@ class TaskPersonaRow(BaseModel):
     account_id: int
     profile_name: str | None = None
     corporate_email: str
+    device_label: str | None = None   # alias del celular (o su nombre si no tiene alias); None sin celular
     platforms: list[TaskActionPlatform]   # SIEMPRE 3, orden: facebook, instagram, tiktok
 
 

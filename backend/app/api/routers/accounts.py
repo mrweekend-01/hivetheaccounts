@@ -20,6 +20,7 @@ def _list_item(acc) -> AccountListItem:
         profile_name=acc.profile_name, status=acc.status,
         device_id=acc.device_id,
         device_name=acc.device.name if acc.device else None,
+        device_nickname=acc.device.nickname if acc.device else None,
         boxphone=acc.device.boxphone if acc.device else None,
         socials=crud.socials_presence(acc),
     )

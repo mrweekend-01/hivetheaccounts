@@ -51,6 +51,46 @@ def toggle_action(db: Session, task_id: int, social_account_id: int,
     return ta
 
 
+def toggle_all_for_persona(db: Session, task_id: int, account_id: int) -> None:
+    """Toggle inteligente: si falta marcar alguna acción activa, marca TODAS
+    en true; si ya estaban todas en true, las desmarca (deshacer). Las redes
+    sin credenciales (inactivas) se ignoran por completo."""
+    account = (db.query(Account)
+              .options(joinedload(Account.social_accounts))
+              .filter(Account.id == account_id).first())
+    if account is None:
+        return
+    active_sa_ids = [sa.id for sa in account.social_accounts
+                    if sa.username and sa.password_encrypted]
+    if not active_sa_ids:
+        return
+
+    existing = (db.query(TaskAction)
+               .filter(TaskAction.task_id == task_id,
+                       TaskAction.social_account_id.in_(active_sa_ids))
+               .all())
+    by_sa = {a.social_account_id: a for a in existing}
+    all_done = all(
+        (ta := by_sa.get(sa_id)) and ta.liked and ta.shared and ta.commented
+        for sa_id in active_sa_ids
+    )
+    new_value = not all_done
+
+    for sa_id in active_sa_ids:
+        ta = by_sa.get(sa_id)
+        if ta is None:
+            ta = TaskAction(task_id=task_id, social_account_id=sa_id)
+            db.add(ta)
+        ta.liked = new_value
+        ta.shared = new_value
+        ta.commented = new_value
+
+    task = get_task(db, task_id)
+    if task:
+        task.updated_at = datetime.now(timezone.utc)
+    db.commit()
+
+
 def reset_task_actions(db: Session, task_id: int) -> int:
     """Limpia todo el progreso (liked/shared/commented) de ESTA tarea puntual."""
     actions = db.query(TaskAction).filter(TaskAction.task_id == task_id).all()
@@ -69,7 +109,7 @@ def reset_task_actions(db: Session, task_id: int) -> int:
 
 def build_persona_rows(db: Session, task_id: int) -> list[TaskPersonaRow]:
     accounts = (db.query(Account)
-                .options(joinedload(Account.social_accounts))
+                .options(joinedload(Account.social_accounts), joinedload(Account.device))
                 .order_by(Account.corporate_email)
                 .all())
 
@@ -95,9 +135,11 @@ def build_persona_rows(db: Session, task_id: int) -> list[TaskPersonaRow]:
                 shared=bool(ta and ta.shared),
                 commented=bool(ta and ta.commented),
             ))
+        device_label = (acc.device.nickname or acc.device.name) if acc.device else None
         rows.append(TaskPersonaRow(
             account_id=acc.id, profile_name=acc.profile_name,
-            corporate_email=acc.corporate_email, platforms=platforms,
+            corporate_email=acc.corporate_email, device_label=device_label,
+            platforms=platforms,
         ))
     return rows
 

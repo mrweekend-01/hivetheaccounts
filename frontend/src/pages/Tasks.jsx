@@ -77,6 +77,11 @@ export default function Tasks() {
     setDetail(r.data);
   }
 
+  async function handleToggleAll(accountId) {
+    const r = await api.post(`/tasks/${detail.id}/persons/${accountId}/toggle-all`);
+    setDetail(r.data);
+  }
+
   async function handleResetChecklist() {
     if (!confirm("¿Reiniciar el checklist de esta tarea? Se borrará todo el progreso marcado."))
       return;
@@ -151,7 +156,7 @@ export default function Tasks() {
             </button>
           </div>
 
-          <TaskPersonaRows rows={detail.rows} onToggle={handleToggle} />
+          <TaskPersonaRows rows={detail.rows} onToggle={handleToggle} onToggleAll={handleToggleAll} />
         </div>
       )}
     </div>

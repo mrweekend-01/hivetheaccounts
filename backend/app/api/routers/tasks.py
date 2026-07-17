@@ -71,6 +71,15 @@ def update_action(task_id: int, social_account_id: int, data: ActionUpdate,
     return _detail(db, task_id)
 
 
+@router.post("/{task_id}/persons/{account_id}/toggle-all", response_model=TaskDetail)
+def toggle_all_actions(task_id: int, account_id: int, db: Session = Depends(get_db),
+                       _=Depends(get_current_user)):
+    if not crud.get_task(db, task_id):
+        raise HTTPException(404, "Tarea no encontrada")
+    crud.toggle_all_for_persona(db, task_id, account_id)
+    return _detail(db, task_id)
+
+
 @router.post("/{task_id}/reset", response_model=TaskDetail)
 def reset_task(task_id: int, db: Session = Depends(get_db),
               _=Depends(get_current_user)):

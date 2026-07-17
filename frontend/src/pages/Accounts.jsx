@@ -98,7 +98,7 @@ export default function Accounts() {
                   <div className="font-medium">{r.profile_name || <span className="text-hive-muted">—</span>}</div>
                   <div className="font-mono text-xs text-hive-muted">{r.corporate_email}</div>
                 </td>
-                <td className="px-4 py-3 text-hive-muted">{r.device_name || "—"}</td>
+                <td className="px-4 py-3 text-hive-muted">{r.device_nickname || r.device_name || "—"}</td>
                 <td className="px-4 py-3 text-hive-muted">{r.boxphone || "—"}</td>
                 <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                 <td className="px-4 py-3"><SocialDots socials={r.socials} /></td>

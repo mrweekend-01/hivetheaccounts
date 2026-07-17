@@ -20,6 +20,7 @@ class AccountListItem(BaseModel):
     status: Status
     device_id: int | None = None
     device_name: str | None = None
+    device_nickname: str | None = None
     boxphone: str | None = None
     socials: SocialsPresence
 
