@@ -8,10 +8,23 @@ export default function CopyField({ label, value, mono = true }) {
   async function copy() {
     if (!value) return;
     try {
-      await navigator.clipboard.writeText(value);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        // Fallback para HTTP sin contexto seguro (ej. IP de red sin HTTPS)
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
-    } catch { /* clipboard bloqueado */ }
+    } catch { /* ambos métodos fallaron */ }
   }
 
   return (
