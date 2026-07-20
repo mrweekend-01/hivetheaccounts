@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import api from "../api/client";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
+import { countryFlag } from "../utils/flags";
+import { COUNTRIES, countryName } from "../utils/countries";
 
 const emptyDevice = { name: "", nickname: "", boxphone: "", status: "activo", notes: "" };
 const emptyProxy = { label: "", provider: "", ip: "", port: "", username: "",
-                     password: "", protocol: "http", status: "operativo", notes: "", device_id: "" };
+                     password: "", protocol: "http", status: "operativo", notes: "",
+                     country_code: "", device_id: "" };
 
 export default function Devices() {
   const { can } = useAuth();
@@ -74,13 +77,20 @@ export default function Devices() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {filteredDevices.map((d) => (
+        {filteredDevices.map((d) => {
+          const countryNames = [...new Set(
+            d.proxies.map((p) => p.country_code).filter(Boolean).map((c) => countryName(c))
+          )];
+          return (
           <div key={d.id} className="card p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="font-semibold">
                 {d.name}
                 {d.nickname && <span className="ml-2 chip bg-hive-panel2 text-hive-muted">{d.nickname}</span>}
                 {d.boxphone && <span className="ml-2 chip bg-hive-panel2 text-hive-muted">{d.boxphone}</span>}
+                {countryNames.map((name) => (
+                  <span key={name} className="ml-2 chip bg-hive-panel2 text-hive-muted">{name}</span>
+                ))}
               </div>
               <StatusBadge status={d.status} />
             </div>
@@ -92,6 +102,11 @@ export default function Devices() {
                       <span className="text-hive-muted text-xs">Proxy {i + 1}</span>
                       <StatusBadge status={p.status} />
                     </div>
+                    {p.country_code && (
+                      <div className="text-xs text-hive-text">
+                        {countryFlag(p.country_code)} {countryName(p.country_code)}
+                      </div>
+                    )}
                     <div className="font-mono text-xs text-hive-text">{p.ip}:{p.port}</div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs text-hive-muted">{p.provider || "—"} · {p.protocol}</span>
@@ -117,7 +132,8 @@ export default function Devices() {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
         {filteredDevices.length === 0 && (
           <p className="text-hive-muted col-span-full py-10 text-center">
             {devices.length === 0
@@ -134,8 +150,9 @@ export default function Devices() {
           <div className="flex flex-wrap gap-2">
             {proxies.filter((p) => !usedProxyIds.has(p.id)).map((p) => (
               <button key={p.id} onClick={() => can.edit && editProxy(p.id, null)}
-                className="card px-3 py-2 text-xs font-mono flex items-center gap-2">
-                {p.ip}:{p.port} <StatusBadge status={p.status} />
+                className="card px-3 py-2 text-xs flex items-center gap-2">
+                {p.country_code && <span>{countryFlag(p.country_code)} {countryName(p.country_code)} ·</span>}
+                <span className="font-mono">{p.ip}:{p.port}</span> <StatusBadge status={p.status} />
               </button>
             ))}
           </div>
@@ -172,7 +189,15 @@ export default function Devices() {
                 <option>http</option><option>socks5</option>
               </select></div>
           </div>
-          <label className="label mt-3">Celular asignado</label>
+          <label className="label mt-3">País</label>
+          <select className="input mb-3" value={proxForm.country_code || ""}
+            onChange={(e) => setProxForm({ ...proxForm, country_code: e.target.value })}>
+            <option value="">— sin especificar —</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>{countryFlag(c.code)} {c.name}</option>
+            ))}
+          </select>
+          <label className="label">Celular asignado</label>
           <select className="input mb-3" value={proxForm.device_id} onChange={(e) => setProxForm({ ...proxForm, device_id: e.target.value })}>
             <option value="">— sin asignar —</option>
             {devices.map((d) => <option key={d.id} value={d.id}>{d.name}{d.nickname ? ` (${d.nickname})` : ""}</option>)}

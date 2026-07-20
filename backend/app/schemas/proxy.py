@@ -12,6 +12,7 @@ class ProxyBase(BaseModel):
     protocol: str = "http"
     status: ProxyStatus = ProxyStatus.operativo
     notes: str | None = None
+    country_code: str | None = None  # ISO 3166-1 alpha-2, ej "US", "DE", "PE"
 
 
 class ProxyCreate(ProxyBase):
@@ -29,6 +30,7 @@ class ProxyUpdate(BaseModel):
     protocol: str | None = None
     status: ProxyStatus | None = None
     notes: str | None = None
+    country_code: str | None = None
     device_id: int | None = None
 
 

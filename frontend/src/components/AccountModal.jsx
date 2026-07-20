@@ -3,6 +3,8 @@ import api from "../api/client";
 import CopyField from "./CopyField";
 import StatusBadge from "./StatusBadge";
 import { useAuth } from "../context/AuthContext";
+import { countryFlag } from "../utils/flags";
+import { countryName } from "../utils/countries";
 
 // Pop de detalle: muestra la info y permite copiar cada recuadro a un click
 export default function AccountModal({ accountId, onClose, onEdit, onPersonality }) {
@@ -75,6 +77,11 @@ export default function AccountModal({ accountId, onClose, onEdit, onPersonality
             <div key={proxy.id}>
               <div className="text-xs font-semibold text-hive-accent uppercase mb-2">
                 {proxies.length > 1 ? `Proxy ${i + 1} del celular` : "Proxy del celular"}
+                {proxy.country_code && (
+                  <span className="ml-2 normal-case text-hive-muted">
+                    {countryFlag(proxy.country_code)} {countryName(proxy.country_code)}
+                  </span>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <CopyField label="IP" value={proxy.ip} />

@@ -22,6 +22,7 @@ class Proxy(Base):
     status = Column(SAEnum(ProxyStatus, name="proxy_status"),
                     default=ProxyStatus.operativo, index=True)
     notes = Column(Text)
+    country_code = Column(String(2), nullable=True)  # ISO 3166-1 alpha-2, ej "US", "DE", "PE"
     device_id = Column(Integer, ForeignKey("devices.id", ondelete="SET NULL"),
                        nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

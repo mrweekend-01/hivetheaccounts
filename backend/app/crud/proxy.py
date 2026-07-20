@@ -17,6 +17,8 @@ def list_all(db: Session, status: str | None = None) -> list[Proxy]:
 
 def create(db: Session, data: ProxyCreate) -> Proxy:
     payload = data.model_dump(exclude={"password"})
+    if payload.get("country_code"):
+        payload["country_code"] = payload["country_code"].upper()
     proxy = Proxy(**payload, password_encrypted=encrypt(data.password))
     db.add(proxy)
     db.commit()
@@ -28,6 +30,8 @@ def update(db: Session, proxy: Proxy, data: ProxyUpdate) -> Proxy:
     payload = data.model_dump(exclude_unset=True)
     if "password" in payload:
         proxy.password_encrypted = encrypt(payload.pop("password"))
+    if payload.get("country_code"):
+        payload["country_code"] = payload["country_code"].upper()
     for k, v in payload.items():
         setattr(proxy, k, v)
     db.commit()
