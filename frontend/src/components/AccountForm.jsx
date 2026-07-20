@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import api from "../api/client";
-import TraitsInput from "./TraitsInput";
 
 const PLATFORMS = ["facebook", "instagram", "tiktok"];
 const STATUSES = ["activo", "inactivo", "suspendido", "en_revision"];
@@ -13,7 +12,6 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
   const [notes, setNotes] = useState("");
   const [profileName, setProfileName] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [traits, setTraits] = useState([]);
   const [socials, setSocials] = useState({}); // {platform: {username, password, profile_url}}
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -27,7 +25,6 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
       setNotes(d.notes || "");
       setProfileName(d.profile_name || "");
       setBirthDate(d.birth_date || "");
-      setTraits(d.traits || []);
       const s = {};
       d.socials.forEach((sa) => {
         s[sa.platform] = {
@@ -65,7 +62,6 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
       profile_name: profileName, status, notes,
       device_id: deviceId ? Number(deviceId) : null,
       birth_date: birthDate || null,
-      traits,
       socials: socialsPayload,
     };
     try {
@@ -87,11 +83,6 @@ export default function AccountForm({ account, devices, onClose, onSaved }) {
 
         <label className="label">Fecha de nacimiento</label>
         <input className="input mb-3" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-
-        <label className="label">Características</label>
-        <div className="mb-3">
-          <TraitsInput value={traits} onChange={setTraits} />
-        </div>
 
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>

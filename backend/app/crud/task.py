@@ -141,9 +141,11 @@ def build_persona_rows(db: Session, task_id: int) -> list[TaskPersonaRow]:
                 commented=bool(ta and ta.commented),
             ))
         device_label = (acc.device.nickname or acc.device.name) if acc.device else None
+        boxphone = acc.device.boxphone if acc.device else None
         rows.append(TaskPersonaRow(
             account_id=acc.id, profile_name=acc.profile_name,
-            corporate_email=acc.corporate_email, device_label=device_label,
+            corporate_email=acc.corporate_email, status=acc.status.value,
+            device_id=acc.device_id, device_label=device_label, boxphone=boxphone,
             platforms=platforms,
         ))
     return rows

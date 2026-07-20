@@ -3,14 +3,15 @@ import api from "../api/client";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
 
-const emptyDevice = { name: "", nickname: "", boxphone: "", status: "activo", notes: "", proxy_id: "" };
+const emptyDevice = { name: "", nickname: "", boxphone: "", status: "activo", notes: "" };
 const emptyProxy = { label: "", provider: "", ip: "", port: "", username: "",
-                     password: "", protocol: "http", status: "operativo", notes: "" };
+                     password: "", protocol: "http", status: "operativo", notes: "", device_id: "" };
 
 export default function Devices() {
   const { can } = useAuth();
   const [devices, setDevices] = useState([]);
   const [proxies, setProxies] = useState([]);
+  const [search, setSearch] = useState("");
   const [devForm, setDevForm] = useState(null);   // null cerrado, obj abierto
   const [proxForm, setProxForm] = useState(null);
 
@@ -20,19 +21,28 @@ export default function Devices() {
   }
   useEffect(load, []);
 
-  const usedProxyIds = new Set(devices.filter((d) => d.proxy).map((d) => d.proxy.id));
+  const usedProxyIds = new Set(devices.flatMap((d) => d.proxies).map((p) => p.id));
+
+  const q = search.trim().toLowerCase();
+  const filteredDevices = q
+    ? devices.filter((d) => {
+        const fields = [d.name, d.nickname, d.boxphone].filter(Boolean).map((s) => s.toLowerCase());
+        if (fields.some((f) => f.includes(q))) return true;
+        return d.proxies.some((p) => p.ip.toLowerCase().includes(q));
+      })
+    : devices;
 
   async function saveDevice() {
-    const body = { ...devForm, proxy_id: devForm.proxy_id ? Number(devForm.proxy_id) : null };
     try {
-      if (devForm.id) await api.put(`/devices/${devForm.id}`, body);
-      else await api.post("/devices", body);
+      if (devForm.id) await api.put(`/devices/${devForm.id}`, devForm);
+      else await api.post("/devices", devForm);
       setDevForm(null); load();
     } catch (e) { alert(e.response?.data?.detail || "Error"); }
   }
 
   async function saveProxy() {
-    const body = { ...proxForm, port: Number(proxForm.port) };
+    const body = { ...proxForm, port: Number(proxForm.port),
+      device_id: proxForm.device_id ? Number(proxForm.device_id) : null };
     try {
       if (proxForm.id) await api.put(`/proxies/${proxForm.id}`, body);
       else await api.post("/proxies", body);
@@ -40,10 +50,10 @@ export default function Devices() {
     } catch (e) { alert(e.response?.data?.detail || "Error"); }
   }
 
-  async function editProxy(p) {
+  async function editProxy(proxyId, deviceId) {
     // trae password descifrada para editar
-    const r = await api.get(`/proxies/${p.id}`);
-    setProxForm({ ...r.data, password: r.data.password || "" });
+    const r = await api.get(`/proxies/${proxyId}`);
+    setProxForm({ ...r.data, password: r.data.password || "", device_id: deviceId ?? "" });
   }
 
   return (
@@ -58,8 +68,13 @@ export default function Devices() {
         )}
       </div>
 
+      <div className="card p-3 mb-4 flex flex-wrap gap-3">
+        <input className="input flex-1 min-w-[180px]" placeholder="Buscar celular o proxy…"
+          value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {devices.map((d) => (
+        {filteredDevices.map((d) => (
           <div key={d.id} className="card p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="font-semibold">
@@ -69,14 +84,24 @@ export default function Devices() {
               </div>
               <StatusBadge status={d.status} />
             </div>
-            {d.proxy ? (
-              <div className="text-sm space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-hive-muted">Proxy</span>
-                  <StatusBadge status={d.proxy.status} />
-                </div>
-                <div className="font-mono text-xs text-hive-text">{d.proxy.ip}:{d.proxy.port}</div>
-                <div className="text-xs text-hive-muted">{d.proxy.provider || "—"} · {d.proxy.protocol}</div>
+            {d.proxies.length > 0 ? (
+              <div className="space-y-2">
+                {d.proxies.map((p, i) => (
+                  <div key={p.id} className="text-sm border border-hive-border rounded-md p-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-hive-muted text-xs">Proxy {i + 1}</span>
+                      <StatusBadge status={p.status} />
+                    </div>
+                    <div className="font-mono text-xs text-hive-text">{p.ip}:{p.port}</div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-hive-muted">{p.provider || "—"} · {p.protocol}</span>
+                      {can.edit && (
+                        <button className="text-hive-accent text-xs hover:underline"
+                          onClick={() => editProxy(p.id, d.id)}>Editar</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="text-sm text-bad">Sin proxy asignada</div>
@@ -86,17 +111,18 @@ export default function Devices() {
               <div className="flex gap-2 mt-3">
                 <button className="btn-ghost text-xs" onClick={() => setDevForm({
                   id: d.id, name: d.name, nickname: d.nickname || "", boxphone: d.boxphone || "",
-                  status: d.status, notes: d.notes || "", proxy_id: d.proxy?.id || "" })}>Editar celular</button>
-                {d.proxy && (
-                  <button className="btn-ghost text-xs" onClick={() => editProxy(d.proxy)}>Editar proxy</button>
-                )}
+                  status: d.status, notes: d.notes || "" })}>Editar celular</button>
+                <button className="btn-ghost text-xs"
+                  onClick={() => setProxForm({ ...emptyProxy, device_id: d.id })}>+ Agregar proxy</button>
               </div>
             )}
           </div>
         ))}
-        {devices.length === 0 && (
+        {filteredDevices.length === 0 && (
           <p className="text-hive-muted col-span-full py-10 text-center">
-            No hay celulares. {can.edit && "Crea un proxy y luego un celular que lo use."}
+            {devices.length === 0
+              ? <>No hay celulares. {can.edit && "Crea un proxy y luego un celular que lo use."}</>
+              : "Ningún celular o proxy coincide con la búsqueda."}
           </p>
         )}
       </div>
@@ -107,7 +133,7 @@ export default function Devices() {
           <h2 className="text-sm font-semibold text-hive-muted mb-2">Proxys sin celular asignado</h2>
           <div className="flex flex-wrap gap-2">
             {proxies.filter((p) => !usedProxyIds.has(p.id)).map((p) => (
-              <button key={p.id} onClick={() => can.edit && editProxy(p)}
+              <button key={p.id} onClick={() => can.edit && editProxy(p.id, null)}
                 className="card px-3 py-2 text-xs font-mono flex items-center gap-2">
                 {p.ip}:{p.port} <StatusBadge status={p.status} />
               </button>
@@ -129,13 +155,6 @@ export default function Devices() {
           <select className="input mb-3" value={devForm.status} onChange={(e) => setDevForm({ ...devForm, status: e.target.value })}>
             {["activo", "inactivo", "suspendido", "en_revision"].map((s) => <option key={s}>{s}</option>)}
           </select>
-          <label className="label">Proxy asignada (única por celular)</label>
-          <select className="input mb-3" value={devForm.proxy_id} onChange={(e) => setDevForm({ ...devForm, proxy_id: e.target.value })}>
-            <option value="">— sin asignar —</option>
-            {proxies.filter((p) => !usedProxyIds.has(p.id) || p.id === devForm.proxy_id).map((p) => (
-              <option key={p.id} value={p.id}>{p.ip}:{p.port} ({p.status})</option>
-            ))}
-          </select>
         </Modal>
       )}
 
@@ -153,7 +172,12 @@ export default function Devices() {
                 <option>http</option><option>socks5</option>
               </select></div>
           </div>
-          <label className="label mt-3">Estado</label>
+          <label className="label mt-3">Celular asignado</label>
+          <select className="input mb-3" value={proxForm.device_id} onChange={(e) => setProxForm({ ...proxForm, device_id: e.target.value })}>
+            <option value="">— sin asignar —</option>
+            {devices.map((d) => <option key={d.id} value={d.id}>{d.name}{d.nickname ? ` (${d.nickname})` : ""}</option>)}
+          </select>
+          <label className="label">Estado</label>
           <select className="input" value={proxForm.status} onChange={(e) => setProxForm({ ...proxForm, status: e.target.value })}>
             <option value="operativo">operativo (verde)</option>
             <option value="inoperativo">inoperativo (rojo)</option>

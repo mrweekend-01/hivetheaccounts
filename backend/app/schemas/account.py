@@ -5,6 +5,16 @@ from app.schemas.social_account import SocialAccountCreate, SocialAccountReveal
 from app.schemas.proxy import ProxyReveal
 
 
+class ConnectionSlot(BaseModel):
+    start: str  # "HH:MM"
+    end: str    # "HH:MM"
+
+
+class FollowedProfile(BaseModel):
+    name: str
+    link: str
+
+
 class SocialsPresence(BaseModel):
     facebook: PresenceState = PresenceState.no_existe
     instagram: PresenceState = PresenceState.no_existe
@@ -34,6 +44,9 @@ class AccountCreate(BaseModel):
     device_id: int | None = None
     birth_date: date | None = None
     traits: list[str] = []
+    description: str | None = None
+    connection_schedule: list[ConnectionSlot] = []
+    followed_profiles: list[FollowedProfile] = []
     socials: list[SocialAccountCreate] = []
 
 
@@ -46,6 +59,9 @@ class AccountUpdate(BaseModel):
     profile_name: str | None = None
     birth_date: date | None = None
     traits: list[str] | None = None
+    description: str | None = None
+    connection_schedule: list[ConnectionSlot] = []
+    followed_profiles: list[FollowedProfile] = []
     # reemplaza el set de redes si se envía (None = no tocar)
     socials: list[SocialAccountCreate] | None = None
 
@@ -61,9 +77,12 @@ class AccountDetail(BaseModel):
     profile_name: str | None = None
     birth_date: date | None = None
     traits: list[str] = []
+    description: str | None = None
+    connection_schedule: list[ConnectionSlot] = []
+    followed_profiles: list[FollowedProfile] = []
     device_id: int | None = None
     device_name: str | None = None
     boxphone: str | None = None        # heredado del device
-    proxy: ProxyReveal | None = None   # proxy heredada del device
+    proxies: list[ProxyReveal] = []    # proxies heredados del device
     socials: list[SocialAccountReveal] = []
     created_at: datetime | None = None

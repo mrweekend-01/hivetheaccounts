@@ -16,7 +16,10 @@ class TaskPersonaRow(BaseModel):
     account_id: int
     profile_name: str | None = None
     corporate_email: str | None = None
+    status: str            # Account.status (activo/inactivo/suspendido/en_revision)
+    device_id: int | None = None
     device_label: str | None = None   # alias del celular (o su nombre si no tiene alias); None sin celular
+    boxphone: str | None = None
     platforms: list[TaskActionPlatform]   # SIEMPRE 3, orden: facebook, instagram, tiktok
 
 

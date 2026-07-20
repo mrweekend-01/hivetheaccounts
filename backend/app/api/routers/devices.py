@@ -13,7 +13,7 @@ router = APIRouter(prefix="/devices", tags=["devices"])
 def _to_out(d) -> DeviceOut:
     out = DeviceOut.model_validate(d)
     out.account_count = len(d.accounts)
-    out.proxy = ProxyOut.model_validate(d.proxy) if d.proxy else None
+    out.proxies = [ProxyOut.model_validate(p) for p in d.proxies]
     return out
 
 
@@ -38,7 +38,7 @@ def create_device(data: DeviceCreate, db: Session = Depends(get_db),
         d = crud.create(db, data)
     except Exception:
         db.rollback()
-        raise HTTPException(400, "Nombre duplicado o proxy ya asignada a otro celular")
+        raise HTTPException(400, "Nombre duplicado")
     return _to_out(crud.get(db, d.id))
 
 
@@ -52,7 +52,7 @@ def update_device(device_id: int, data: DeviceUpdate, db: Session = Depends(get_
         crud.update(db, d, data)
     except Exception:
         db.rollback()
-        raise HTTPException(400, "Nombre duplicado o proxy ya asignada a otro celular")
+        raise HTTPException(400, "Nombre duplicado")
     return _to_out(crud.get(db, device_id))
 
 

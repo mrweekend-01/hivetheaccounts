@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import api from "../api/client";
 import HumanizationSocialIcon from "../components/HumanizationSocialIcon";
 import TraitsInput from "../components/TraitsInput";
+import HumanizationSchedules from "../components/HumanizationSchedules";
 import { useAuth } from "../context/AuthContext";
 
 const MIN_HUMANIZATION_MINUTES = 30;
@@ -21,6 +22,7 @@ function fmtLastHumanized(iso) {
 
 export default function Humanization() {
   const { can } = useAuth();
+  const [tab, setTab] = useState("vista"); // "vista" | "programacion"
   const [view, setView] = useState(null);
   const [, setTick] = useState(0);              // fuerza re-render cada seg
   const [editingPersona, setEditingPersona] = useState(null); // persona siendo editada (traits)
@@ -171,6 +173,18 @@ export default function Humanization() {
         </div>
       </div>
 
+      <div className="flex gap-2 mb-4">
+        <button className={tab === "vista" ? "btn-primary" : "btn-ghost"} onClick={() => setTab("vista")}>
+          Vista
+        </button>
+        <button className={tab === "programacion" ? "btn-primary" : "btn-ghost"} onClick={() => setTab("programacion")}>
+          Programación
+        </button>
+      </div>
+
+      {tab === "programacion" ? (
+        <HumanizationSchedules view={view} />
+      ) : (
       <div className="space-y-4">
         {view.groups.map((g) => (
           <div key={g.device_id ?? "none"} className="card p-4">
@@ -234,6 +248,7 @@ export default function Humanization() {
           <p className="text-hive-muted py-10 text-center">No hay cuentas todavía.</p>
         )}
       </div>
+      )}
 
       {editingPersona && (
         <div className="fixed inset-0 bg-black/70 grid place-items-center z-50 p-4" onClick={() => setEditingPersona(null)}>

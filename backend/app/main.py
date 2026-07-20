@@ -1,11 +1,21 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.scheduler import scheduler
 from app.api.routers import (auth, accounts, proxies, devices,
-                             humanization, tasks, users, export,
+                             humanization, humanization_schedules, tasks, users, export,
                              settings as settings_router)
 
-app = FastAPI(title="Hack the Accounts API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+
+app = FastAPI(title="Hack the Accounts API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,6 +30,7 @@ app.include_router(accounts.router)
 app.include_router(proxies.router)
 app.include_router(devices.router)
 app.include_router(humanization.router)
+app.include_router(humanization_schedules.router)
 app.include_router(tasks.router)
 app.include_router(users.router)
 app.include_router(export.router)

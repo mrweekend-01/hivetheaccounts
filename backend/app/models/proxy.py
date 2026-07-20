@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Enum as SAEnum
+from sqlalchemy import (Column, Integer, String, Text, DateTime,
+                        ForeignKey, Enum as SAEnum)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -6,7 +7,8 @@ from app.core.enums import ProxyStatus
 
 
 class Proxy(Base):
-    """Proxy comprado a un proveedor. Relación 1:1 con un dispositivo."""
+    """Proxy comprado a un proveedor. Relación N:1 con un dispositivo (un
+    celular puede tener varios proxies; cada proxy pertenece a lo sumo uno)."""
     __tablename__ = "proxies"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -20,8 +22,9 @@ class Proxy(Base):
     status = Column(SAEnum(ProxyStatus, name="proxy_status"),
                     default=ProxyStatus.operativo, index=True)
     notes = Column(Text)
+    device_id = Column(Integer, ForeignKey("devices.id", ondelete="SET NULL"),
+                       nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # 1:1 -> back_populates con uselist=False del lado device
-    device = relationship("Device", back_populates="proxy", uselist=False)
+    device = relationship("Device", back_populates="proxies")

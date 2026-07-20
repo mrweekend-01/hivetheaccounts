@@ -13,7 +13,7 @@ class DeviceBase(BaseModel):
 
 
 class DeviceCreate(DeviceBase):
-    proxy_id: int | None = None
+    pass
 
 
 class DeviceUpdate(BaseModel):
@@ -22,12 +22,11 @@ class DeviceUpdate(BaseModel):
     boxphone: str | None = None
     status: Status | None = None
     notes: str | None = None
-    proxy_id: int | None = None
 
 
 class DeviceOut(DeviceBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    proxy: ProxyOut | None = None
+    proxies: list[ProxyOut] = []
     account_count: int = 0
     created_at: datetime | None = None

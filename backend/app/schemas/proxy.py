@@ -16,6 +16,7 @@ class ProxyBase(BaseModel):
 
 class ProxyCreate(ProxyBase):
     password: str | None = None  # texto plano de entrada, se cifra en el CRUD
+    device_id: int | None = None  # celular al que queda asignado (opcional)
 
 
 class ProxyUpdate(BaseModel):
@@ -28,6 +29,7 @@ class ProxyUpdate(BaseModel):
     protocol: str | None = None
     status: ProxyStatus | None = None
     notes: str | None = None
+    device_id: int | None = None
 
 
 class ProxyOut(ProxyBase):

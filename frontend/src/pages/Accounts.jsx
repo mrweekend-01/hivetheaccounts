@@ -4,6 +4,7 @@ import StatusBadge from "../components/StatusBadge";
 import SocialDots from "../components/SocialDots";
 import AccountModal from "../components/AccountModal";
 import AccountForm from "../components/AccountForm";
+import PersonalityPanel from "../components/PersonalityPanel";
 import { useAuth } from "../context/AuthContext";
 
 const API = window.__API_URL__ || import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -15,6 +16,7 @@ export default function Accounts() {
   const [f, setF] = useState({ platform: "", status: "", device_id: "", boxphone: "", search: "" });
   const [openId, setOpenId] = useState(null);
   const [formFor, setFormFor] = useState(undefined); // undefined=cerrado, null=nuevo, obj=editar
+  const [personalityId, setPersonalityId] = useState(null);
 
   const load = useCallback(() => {
     const params = Object.fromEntries(Object.entries(f).filter(([, v]) => v));
@@ -114,12 +116,18 @@ export default function Accounts() {
 
       {openId && (
         <AccountModal accountId={openId} onClose={() => setOpenId(null)}
-          onEdit={(acc) => { setOpenId(null); setFormFor(acc); }} />
+          onEdit={(acc) => { setOpenId(null); setFormFor(acc); }}
+          onPersonality={(acc) => { setOpenId(null); setPersonalityId(acc.id); }} />
       )}
       {formFor !== undefined && (
         <AccountForm account={formFor} devices={devices}
           onClose={() => setFormFor(undefined)}
           onSaved={() => { setFormFor(undefined); load(); }} />
+      )}
+      {personalityId && (
+        <PersonalityPanel accountId={personalityId}
+          onClose={() => setPersonalityId(null)}
+          onSaved={() => { setPersonalityId(null); load(); }} />
       )}
     </div>
   );

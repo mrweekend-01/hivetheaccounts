@@ -54,7 +54,10 @@ def get_account(account_id: int, reveal: bool = False,
         boxphone=acc.device.boxphone if acc.device else None,
         profile_name=acc.profile_name, birth_date=acc.birth_date,
         traits=acc.traits or [],
-        created_at=acc.created_at, socials=[], proxy=None,
+        description=acc.description,
+        connection_schedule=acc.connection_schedule or [],
+        followed_profiles=acc.followed_profiles or [],
+        created_at=acc.created_at, socials=[], proxies=[],
     )
     for sa in acc.social_accounts:
         detail.socials.append(SocialAccountReveal(
@@ -64,10 +67,11 @@ def get_account(account_id: int, reveal: bool = False,
             humanization_status=sa.humanization_status,
             password=decrypt(sa.password_encrypted) if reveal else None,
         ))
-    if acc.device and acc.device.proxy:
-        p = acc.device.proxy
-        detail.proxy = ProxyReveal.model_validate(p)
-        detail.proxy.password = decrypt(p.password_encrypted) if reveal else None
+    if acc.device:
+        for p in acc.device.proxies:
+            proxy_out = ProxyReveal.model_validate(p)
+            proxy_out.password = decrypt(p.password_encrypted) if reveal else None
+            detail.proxies.append(proxy_out)
     if reveal:
         detail.corp_password = decrypt(acc.corp_password_encrypted)
     return detail

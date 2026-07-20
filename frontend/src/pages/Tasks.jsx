@@ -33,6 +33,7 @@ export default function Tasks() {
   const [detail, setDetail] = useState(null);
   const [linkDraft, setLinkDraft] = useState("");
   const [creating, setCreating] = useState(false);
+  const [f, setF] = useState({ search: "", platform: "", status: "", device_id: "", boxphone: "" });
 
   function loadList() {
     return api.get("/tasks").then((r) => setList(r.data));
@@ -44,6 +45,7 @@ export default function Tasks() {
     const r = await api.get(`/tasks/${id}`);
     setDetail(r.data);
     setLinkDraft(r.data.link || "");
+    setF({ search: "", platform: "", status: "", device_id: "", boxphone: "" });
     setView("detail");
   }
 
@@ -53,6 +55,7 @@ export default function Tasks() {
       const r = await api.post("/tasks", {});
       setDetail(r.data);
       setLinkDraft(r.data.link || "");
+      setF({ search: "", platform: "", status: "", device_id: "", boxphone: "" });
       setView("detail");
     } finally {
       setCreating(false);
@@ -98,6 +101,29 @@ export default function Tasks() {
     const r = await api.post(`/tasks/${detail.id}/reset`);
     setDetail(r.data);
   }
+
+  const deviceOptions = detail
+    ? [...new Map(detail.rows.filter((r) => r.device_id != null).map((r) => [r.device_id, r.device_label])).entries()]
+    : [];
+  const boxphoneOptions = detail
+    ? [...new Set(detail.rows.map((r) => r.boxphone).filter(Boolean))].sort()
+    : [];
+
+  const filteredRows = detail
+    ? detail.rows.filter((r) => {
+        if (f.search) {
+          const q = f.search.toLowerCase();
+          const matches = (r.profile_name || "").toLowerCase().includes(q) ||
+            (r.corporate_email || "").toLowerCase().includes(q);
+          if (!matches) return false;
+        }
+        if (f.platform && !r.platforms.some((p) => p.platform === f.platform && p.active)) return false;
+        if (f.status && r.status !== f.status) return false;
+        if (f.device_id && String(r.device_id) !== String(f.device_id)) return false;
+        if (f.boxphone && r.boxphone !== f.boxphone) return false;
+        return true;
+      })
+    : [];
 
   return (
     <div>
@@ -172,7 +198,33 @@ export default function Tasks() {
             </button>
           </div>
 
-          <TaskPersonaRows rows={detail.rows} onToggle={handleToggle} onToggleAll={handleToggleAll} />
+          <div className="card p-3 mb-4 flex flex-wrap gap-3">
+            <input className="input flex-1 min-w-[180px]" placeholder="Buscar nombre o correo…"
+              value={f.search} onChange={(e) => setF({ ...f, search: e.target.value })} />
+            <select className="input w-auto" value={f.platform} onChange={(e) => setF({ ...f, platform: e.target.value })}>
+              <option value="">Todas las redes</option>
+              <option value="facebook">Facebook</option>
+              <option value="instagram">Instagram</option>
+              <option value="tiktok">TikTok</option>
+            </select>
+            <select className="input w-auto" value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}>
+              <option value="">Todos los estados</option>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+              <option value="suspendido">Suspendido</option>
+              <option value="en_revision">En revisión</option>
+            </select>
+            <select className="input w-auto" value={f.device_id} onChange={(e) => setF({ ...f, device_id: e.target.value })}>
+              <option value="">Todos los celulares</option>
+              {deviceOptions.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+            <select className="input w-auto" value={f.boxphone} onChange={(e) => setF({ ...f, boxphone: e.target.value })}>
+              <option value="">Todos los boxphones</option>
+              {boxphoneOptions.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+
+          <TaskPersonaRows rows={filteredRows} onToggle={handleToggle} onToggleAll={handleToggleAll} />
         </div>
       )}
     </div>

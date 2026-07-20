@@ -128,17 +128,16 @@ def build_profile_link_maps(wb):
 def create_devices(db, nickname_map, proxy_map) -> dict[int, Device]:
     devices = {}
     for num in range(1, 21):
-        proxy = None
+        device = Device(name=f"CEL {num}", nickname=nickname_map.get(num))
+        db.add(device)
+        db.flush()
         pdata = proxy_map.get(num)
         if pdata:
             proxy = Proxy(ip=pdata["ip"], port=pdata["port"], username=pdata["username"],
-                          password_encrypted=encrypt(pdata["password"]), status=pdata["status"])
+                          password_encrypted=encrypt(pdata["password"]), status=pdata["status"],
+                          device_id=device.id)
             db.add(proxy)
             db.flush()
-        device = Device(name=f"CEL {num}", nickname=nickname_map.get(num),
-                        proxy_id=proxy.id if proxy else None)
-        db.add(device)
-        db.flush()
         devices[num] = device
     print(f"  {len(devices)} celulares creados (CEL 1..CEL 20) con sus proxys.")
     return devices

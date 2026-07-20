@@ -7,6 +7,7 @@ from app.models.social_account import SocialAccount
 from app.models.app_settings import AppSettings
 from app.models.task import Task
 from app.models.task_action import TaskAction
+from app.models.humanization_schedule import HumanizationSchedule
 
 __all__ = ["Base", "User", "Proxy", "Device", "Account", "SocialAccount", "AppSettings",
-          "Task", "TaskAction"]
+          "Task", "TaskAction", "HumanizationSchedule"]

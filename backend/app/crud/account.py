@@ -83,6 +83,9 @@ def create(db: Session, data: AccountCreate, created_by: int | None) -> Account:
         profile_name=data.profile_name,
         birth_date=data.birth_date,
         traits=data.traits,
+        description=data.description,
+        connection_schedule=[s.model_dump() for s in data.connection_schedule],
+        followed_profiles=[f.model_dump() for f in data.followed_profiles],
         device_id=data.device_id,
         created_by=created_by,
     )
@@ -123,7 +126,3 @@ def reveal_corp_password(account: Account) -> str | None:
     return decrypt(account.corp_password_encrypted)
 
 
-def reveal_proxy_password(account: Account) -> str | None:
-    if account.device and account.device.proxy:
-        return decrypt(account.device.proxy.password_encrypted)
-    return None

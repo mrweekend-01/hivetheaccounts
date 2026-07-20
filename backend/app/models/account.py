@@ -26,6 +26,11 @@ class Account(Base):
     birth_date = Column(Date)                # "Fecha de Nacimiento"
     traits = Column(JSON, nullable=False, default=list, server_default="[]")
 
+    # ---- panel "Personalidad" ----
+    description = Column(Text, nullable=True)       # notas de estilo/tono del perfil
+    connection_schedule = Column(JSON, nullable=True)  # [{"start": "HH:MM", "end": "HH:MM"}]
+    followed_profiles = Column(JSON, nullable=True)    # [{"name": "...", "link": "..."}]
+
     device_id = Column(Integer, ForeignKey("devices.id", ondelete="SET NULL"),
                        index=True)
 

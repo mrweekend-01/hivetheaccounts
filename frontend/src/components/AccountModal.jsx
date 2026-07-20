@@ -5,7 +5,7 @@ import StatusBadge from "./StatusBadge";
 import { useAuth } from "../context/AuthContext";
 
 // Pop de detalle: muestra la info y permite copiar cada recuadro a un click
-export default function AccountModal({ accountId, onClose, onEdit }) {
+export default function AccountModal({ accountId, onClose, onEdit, onPersonality }) {
   const { can } = useAuth();
   const [data, setData] = useState(null);
 
@@ -21,14 +21,17 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
       </div>
     );
 
-  const proxy = data.proxy;
+  const proxies = data.proxies || [];
 
   return (
     <div className="fixed inset-0 bg-black/70 grid place-items-center z-50 p-4" onClick={onClose}>
       <div className="card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">{data.profile_name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">{data.profile_name}</h3>
+              {can.edit && <button className="btn-ghost text-xs" onClick={() => onPersonality(data)}>Personalidad</button>}
+            </div>
             {data.corporate_email && <p className="text-hive-muted text-sm font-mono">{data.corporate_email}</p>}
             <div className="flex items-center gap-2 mt-1">
               <StatusBadge status={data.status} />
@@ -68,9 +71,11 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
             </div>
           ))}
 
-          {proxy && (
-            <div>
-              <div className="text-xs font-semibold text-hive-accent uppercase mb-2">Proxy del celular</div>
+          {proxies.map((proxy, i) => (
+            <div key={proxy.id}>
+              <div className="text-xs font-semibold text-hive-accent uppercase mb-2">
+                {proxies.length > 1 ? `Proxy ${i + 1} del celular` : "Proxy del celular"}
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <CopyField label="IP" value={proxy.ip} />
                 <CopyField label="Puerto" value={String(proxy.port)} />
@@ -78,7 +83,7 @@ export default function AccountModal({ accountId, onClose, onEdit }) {
                 {can.reveal && <CopyField label="Contraseña" value={proxy.password} />}
               </div>
             </div>
-          )}
+          ))}
 
           {data.notes && (
             <div>

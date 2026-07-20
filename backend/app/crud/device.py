@@ -5,13 +5,13 @@ from app.schemas.device import DeviceCreate, DeviceUpdate
 
 def get(db: Session, device_id: int) -> Device | None:
     return (db.query(Device)
-            .options(joinedload(Device.proxy), joinedload(Device.accounts))
+            .options(joinedload(Device.proxies), joinedload(Device.accounts))
             .filter(Device.id == device_id).first())
 
 
 def list_all(db: Session) -> list[Device]:
     return (db.query(Device)
-            .options(joinedload(Device.proxy), joinedload(Device.accounts))
+            .options(joinedload(Device.proxies), joinedload(Device.accounts))
             .order_by(Device.name).all())
 
 
