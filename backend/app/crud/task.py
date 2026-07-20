@@ -76,7 +76,7 @@ def toggle_all_for_persona(db: Session, task_id: int, account_id: int) -> None:
                .all())
     by_sa = {a.social_account_id: a for a in existing}
     all_done = all(
-        (ta := by_sa.get(sa_id)) and ta.liked and ta.shared and ta.commented
+        (ta := by_sa.get(sa_id)) and ta.liked and ta.shared and ta.commented and ta.followed
         for sa_id in active_sa_ids
     )
     new_value = not all_done
@@ -89,6 +89,7 @@ def toggle_all_for_persona(db: Session, task_id: int, account_id: int) -> None:
         ta.liked = new_value
         ta.shared = new_value
         ta.commented = new_value
+        ta.followed = new_value
 
     task = get_task(db, task_id)
     if task:
@@ -103,6 +104,7 @@ def reset_task_actions(db: Session, task_id: int) -> int:
         ta.liked = False
         ta.shared = False
         ta.commented = False
+        ta.followed = False
     task = get_task(db, task_id)
     if task:
         task.updated_at = datetime.now(timezone.utc)
@@ -139,6 +141,7 @@ def build_persona_rows(db: Session, task_id: int) -> list[TaskPersonaRow]:
                 liked=bool(ta and ta.liked),
                 shared=bool(ta and ta.shared),
                 commented=bool(ta and ta.commented),
+                followed=bool(ta and ta.followed),
             ))
         device_label = (acc.device.nickname or acc.device.name) if acc.device else None
         boxphone = acc.device.boxphone if acc.device else None
@@ -158,8 +161,9 @@ def _completion(rows: list[TaskPersonaRow]) -> tuple[int, int]:
         for p in row.platforms:
             if not p.active:
                 continue
-            total += 3
-            done += (1 if p.liked else 0) + (1 if p.shared else 0) + (1 if p.commented else 0)
+            total += 4
+            done += ((1 if p.liked else 0) + (1 if p.shared else 0) +
+                    (1 if p.commented else 0) + (1 if p.followed else 0))
     return done, total
 
 

@@ -10,6 +10,7 @@ class TaskActionPlatform(BaseModel):
     liked: bool = False
     shared: bool = False
     commented: bool = False
+    followed: bool = False
 
 
 class TaskPersonaRow(BaseModel):
@@ -38,5 +39,5 @@ class TaskHistoryItem(BaseModel):
     link: str
     created_at: datetime
     updated_at: datetime | None = None
-    completed_count: int   # liked+shared+commented=True en TODAS las redes activas
-    total_count: int       # (redes activas de cada persona) * 3, sobre todas las personas
+    completed_count: int   # liked+shared+commented+followed=True en TODAS las redes activas
+    total_count: int       # (redes activas de cada persona) * 4, sobre todas las personas

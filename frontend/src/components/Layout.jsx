@@ -30,6 +30,15 @@ export default function Layout() {
               </NavLink>
             ))}
             {user?.role === "admin" && (
+              <NavLink to="/urgent-tasks"
+                className={({ isActive }) =>
+                  `px-3 py-1.5 rounded-md text-sm ${
+                    isActive ? "bg-hive-accent text-white font-medium"
+                             : "text-hive-muted hover:text-hive-text hover:bg-hive-panel2"}`}>
+                Urgent Task
+              </NavLink>
+            )}
+            {user?.role === "admin" && (
               <NavLink to="/users"
                 className={({ isActive }) =>
                   `px-3 py-1.5 rounded-md text-sm ${

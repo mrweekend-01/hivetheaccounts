@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.scheduler import scheduler
 from app.api.routers import (auth, accounts, proxies, devices,
-                             humanization, humanization_schedules, tasks, users, export,
-                             settings as settings_router)
+                             humanization, humanization_schedules, tasks, urgent_tasks,
+                             users, export, settings as settings_router)
 
 
 @asynccontextmanager
@@ -32,6 +32,7 @@ app.include_router(devices.router)
 app.include_router(humanization.router)
 app.include_router(humanization_schedules.router)
 app.include_router(tasks.router)
+app.include_router(urgent_tasks.router)
 app.include_router(users.router)
 app.include_router(export.router)
 app.include_router(settings_router.router)

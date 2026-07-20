@@ -2,9 +2,9 @@ import TaskActionGroup from "./TaskActionGroup";
 
 function rowCompletion(row) {
   const activePlatforms = row.platforms.filter((p) => p.active);
-  const total = activePlatforms.length * 3;
+  const total = activePlatforms.length * 4;
   const done = activePlatforms.reduce(
-    (sum, p) => sum + (p.liked ? 1 : 0) + (p.shared ? 1 : 0) + (p.commented ? 1 : 0), 0);
+    (sum, p) => sum + (p.liked ? 1 : 0) + (p.shared ? 1 : 0) + (p.commented ? 1 : 0) + (p.followed ? 1 : 0), 0);
   return { total, done };
 }
 
@@ -32,7 +32,7 @@ export default function TaskPersonaRows({ rows, onToggle, onToggleAll }) {
             <div className="flex flex-wrap gap-2 flex-1">
               {row.platforms.map((p) => (
                 <TaskActionGroup key={p.platform} platform={p.platform} active={p.active}
-                  liked={p.liked} shared={p.shared} commented={p.commented}
+                  liked={p.liked} shared={p.shared} commented={p.commented} followed={p.followed}
                   onToggle={onToggle
                     ? (field) => onToggle(p.social_account_id, field, p[field])
                     : undefined} />

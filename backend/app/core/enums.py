@@ -38,3 +38,15 @@ class PresenceState(str, Enum):
     no_existe = "no_existe"
     pendiente = "pendiente"
     activa = "activa"
+
+
+class UrgentPriority(str, Enum):
+    baja = "baja"
+    media = "media"
+    alta = "alta"
+
+
+class UrgentStatus(str, Enum):
+    no_arrancada = "no_arrancada"
+    en_proceso = "en_proceso"
+    finalizada = "finalizada"

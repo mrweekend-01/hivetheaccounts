@@ -4,12 +4,13 @@ const FIELDS = [
   { key: "liked", label: "Like" },
   { key: "shared", label: "Comp." },
   { key: "commented", label: "Coment." },
+  { key: "followed", label: "Follow" },
 ];
 
-// Grupo de 3 casillas (like/compartido/comentario) para una red social dentro
-// de una fila de Tasks. Sin onToggle se vuelve de solo lectura (historial).
-export default function TaskActionGroup({ platform, active, liked, shared, commented, onToggle }) {
-  const values = { liked, shared, commented };
+// Grupo de 4 casillas (like/compartido/comentario/follow) para una red social
+// dentro de una fila de Tasks. Sin onToggle se vuelve de solo lectura (historial).
+export default function TaskActionGroup({ platform, active, liked, shared, commented, followed, onToggle }) {
+  const values = { liked, shared, commented, followed };
   const interactive = active && typeof onToggle === "function";
   return (
     <div className={`trio-group ${active ? "" : "off"}`}

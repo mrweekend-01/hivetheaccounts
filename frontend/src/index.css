@@ -95,7 +95,7 @@ body {
   }
 
   /* ---- Tasks: trío de acciones (like/compartido/comentario) por red social ----
-     Reutiliza el lenguaje de "port" (mono + borde) pero como grupo de 3 casillas
+     Reutiliza el lenguaje de "port" (mono + borde) pero como grupo de 4 casillas
      clickeables en vez de un solo indicador, para que un vistazo a la fila diga
      qué falta marcar. */
   .trio-group {
@@ -122,6 +122,35 @@ body {
   .progress-fill.stop { @apply bg-bad; }
   .progress-fill.work { @apply bg-warn; }
   .progress-fill.go   { @apply bg-ok; }
+
+  /* ---- Urgent Task: tablero kanban de administradores ----
+     Dos ejes de color independientes y deliberados: la COLUMNA cuenta el
+     estado (gris/ámbar/verde, mismo lenguaje semántico que el resto de la
+     app), la tarjeta cuenta la prioridad con su borde izquierdo. Un vistazo
+     al tablero dice "qué tan urgente" y "qué tan avanzado" a la vez. */
+  .kanban-col {
+    @apply rounded-lg bg-hive-panel2/50 border border-hive-border flex flex-col;
+  }
+  .kanban-col-head {
+    @apply flex items-center justify-between gap-2 px-3 py-2.5 border-b-[3px] rounded-t-lg;
+  }
+  .kanban-col-head.no_arrancada { @apply border-hive-muted; }
+  .kanban-col-head.en_proceso   { @apply border-warn; }
+  .kanban-col-head.finalizada   { @apply border-ok; }
+  .kanban-col-body {
+    @apply flex-1 p-2.5 space-y-2.5 min-h-[120px] rounded-b-lg transition-colors;
+  }
+  .kanban-col-body.over { @apply bg-hive-accent/[0.06]; }
+
+  .kanban-card {
+    @apply bg-hive-panel border border-hive-border border-l-4 rounded-md p-3
+           shadow-sm cursor-grab active:cursor-grabbing
+           transition-shadow hover:shadow-md hover:border-hive-border;
+  }
+  .kanban-card.dragging { @apply opacity-30; }
+  .kanban-card.priority-baja  { @apply border-l-hive-muted; }
+  .kanban-card.priority-media { @apply border-l-warn; }
+  .kanban-card.priority-alta  { @apply border-l-bad; }
 }
 
 @keyframes breathe-stop {

@@ -6,7 +6,7 @@ from app.core.database import Base
 
 class TaskAction(Base):
     """Qué hizo (o no) un perfil (SocialAccount) en una Task dada: like,
-    compartido, comentario. Una fila por (task_id, social_account_id)."""
+    compartido, comentario, follow. Una fila por (task_id, social_account_id)."""
     __tablename__ = "task_actions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -18,6 +18,7 @@ class TaskAction(Base):
     liked = Column(Boolean, default=False, nullable=False)
     shared = Column(Boolean, default=False, nullable=False)
     commented = Column(Boolean, default=False, nullable=False)
+    followed = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     __table_args__ = (

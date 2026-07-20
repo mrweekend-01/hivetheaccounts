@@ -9,7 +9,7 @@ from app.api.deps import get_current_user, require_roles
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
-VALID_FIELDS = {"liked", "shared", "commented"}
+VALID_FIELDS = {"liked", "shared", "commented", "followed"}
 
 
 class TaskCreateBody(BaseModel):
