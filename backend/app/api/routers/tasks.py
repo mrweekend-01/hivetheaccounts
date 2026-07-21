@@ -36,6 +36,7 @@ def _detail(db: Session, task_id: int) -> TaskDetail:
         raise HTTPException(404, "Tarea no encontrada")
     rows = crud.build_persona_rows(db, task.id)
     return TaskDetail(id=task.id, link=task.link, comment=task.comment,
+                      force_completed=task.force_completed,
                       created_at=task.created_at, updated_at=task.updated_at, rows=rows)
 
 
@@ -105,7 +106,7 @@ def complete_task(task_id: int, data: CompleteBody, db: Session = Depends(get_db
                   _=Depends(get_current_user)):
     if not crud.get_task(db, task_id):
         raise HTTPException(404, "Tarea no encontrada")
-    crud.mark_task_complete(db, task_id, data.value)
+    crud.set_force_completed(db, task_id, data.value)
     return _detail(db, task_id)
 
 

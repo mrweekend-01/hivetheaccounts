@@ -20,26 +20,19 @@ function truncateLink(link, max = 60) {
 }
 
 function progress(item) {
+  if (item.force_completed) {
+    const real = item.total_count > 0 ? ` · ${item.completed_count}/${item.total_count} real` : "";
+    return { pct: 100, label: `Cerrada${real}`, cls: "go" };
+  }
   if (item.total_count === 0) return { pct: null, label: "—", cls: "" };
-  const pct = Math.round((item.completed_count / item.total_count) * 100);
+  const pct = item.display_percent;
   const cls = pct === 0 ? "stop" : pct === 100 ? "go" : "work";
   return { pct, label: `${item.completed_count}/${item.total_count} · ${pct}%`, cls };
 }
 
-function isTaskComplete(item) {
-  return item.total_count > 0 && item.completed_count === item.total_count;
-}
-
-function completionFromRows(rows) {
-  let total = 0, done = 0;
-  for (const row of rows) {
-    for (const p of row.platforms) {
-      if (!p.active) continue;
-      total += 4;
-      done += (p.liked ? 1 : 0) + (p.shared ? 1 : 0) + (p.commented ? 1 : 0) + (p.followed ? 1 : 0);
-    }
-  }
-  return { done, total };
+function displayPercentFor(item) {
+  if (item.force_completed) return 100;
+  return item.total_count > 0 ? Math.round((item.completed_count / item.total_count) * 100) : 0;
 }
 
 export default function Tasks() {
@@ -146,16 +139,20 @@ export default function Tasks() {
 
   async function handleComplete(e, t) {
     e.stopPropagation();
-    const complete = isTaskComplete(t);
-    const msg = complete
-      ? "¿Desmarcar toda esta tarea? Se quitarán todas las acciones completadas."
-      : "¿Marcar toda esta tarea como completada al 100%?";
+    const closed = t.force_completed;
+    const msg = closed
+      ? "¿Reabrir esta tarea? Volverá a mostrar su progreso real."
+      : "¿Marcar esta tarea como completada? El progreso real de cada perfil no se modifica, solo se cierra la tarea.";
     if (!confirm(msg)) return;
-    const r = await api.post(`/tasks/${t.id}/complete`, { value: !complete });
-    const { done, total } = completionFromRows(r.data.rows);
+    const r = await api.post(`/tasks/${t.id}/complete`, { value: !closed });
     setList((prev) => prev.map((item) =>
       item.id === t.id
-        ? { ...item, completed_count: done, total_count: total, updated_at: r.data.updated_at }
+        ? {
+            ...item,
+            force_completed: r.data.force_completed,
+            display_percent: displayPercentFor({ ...item, force_completed: r.data.force_completed }),
+            updated_at: r.data.updated_at,
+          }
         : item));
   }
 
@@ -207,7 +204,7 @@ export default function Tasks() {
           <div className="card divide-y divide-hive-border">
             {filteredList.map((t) => {
               const { pct, label, cls } = progress(t);
-              const complete = isTaskComplete(t);
+              const complete = t.force_completed;
               const hasComment = !!(t.comment && t.comment.trim());
               return (
                 <div key={t.id}>
@@ -231,17 +228,17 @@ export default function Tasks() {
                     </span>
                     <button type="button"
                       className={`btn-ghost text-xs px-2 py-1.5 shrink-0 ${complete ? "text-ok" : "text-hive-muted"}`}
-                      title={complete ? "Desmarcar tarea completa" : "Marcar tarea completa"}
+                      title={complete ? "Reabrir tarea (mostrar progreso real)" : "Cerrar tarea al 100%"}
                       onClick={(e) => handleComplete(e, t)}>
                       {complete ? "✅" : "⬜"}
                     </button>
-                    <div className="flex items-center gap-2 shrink-0 w-48 justify-end">
+                    <div className="flex items-center gap-2 shrink-0 w-56 justify-end">
                       <div className="progress-track">
                         {pct !== null && (
                           <div className={`progress-fill ${cls}`} style={{ width: `${pct}%` }} />
                         )}
                       </div>
-                      <span className="text-xs font-mono text-hive-muted w-28 text-right">
+                      <span className="text-xs font-mono text-hive-muted w-36 text-right">
                         {label}
                       </span>
                     </div>

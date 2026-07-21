@@ -30,6 +30,7 @@ class TaskDetail(BaseModel):
     id: int
     link: str
     comment: str | None = None
+    force_completed: bool = False
     created_at: datetime
     updated_at: datetime | None = None
     rows: list[TaskPersonaRow]   # TODOS los perfiles, lista plana sin agrupar por celular
@@ -42,5 +43,7 @@ class TaskHistoryItem(BaseModel):
     comment: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
-    completed_count: int   # liked+shared+commented+followed=True en TODAS las redes activas
+    completed_count: int   # liked+shared+commented+followed=True en TODAS las redes activas (progreso REAL)
     total_count: int       # (redes activas de cada persona) * 4, sobre todas las personas
+    force_completed: bool = False   # cierre manual: no altera completed_count/total_count
+    display_percent: int   # 100 si force_completed, si no el % real (completed_count/total_count)

@@ -104,42 +104,16 @@ def toggle_all_for_persona(db: Session, task_id: int, account_id: int) -> None:
     db.commit()
 
 
-def mark_task_complete(db: Session, task_id: int, value: bool) -> None:
-    """Marca (o desmarca) liked/shared/commented/followed en `value` para
-    TODAS las redes activas de TODAS las personas de la tarea, de una sola
-    vez (mismo criterio que toggle_all_for_persona pero para todas las
-    personas juntas, no una por una)."""
-    accounts = (db.query(Account)
-               .options(joinedload(Account.social_accounts))
-               .all())
-    active_sa_ids: list[int] = []
-    for acc in accounts:
-        active_sa_ids.extend(
-            sa.id for sa in acc.social_accounts if sa.username and sa.password_encrypted
-        )
-    if not active_sa_ids:
-        return
-
-    existing = (db.query(TaskAction)
-               .filter(TaskAction.task_id == task_id,
-                       TaskAction.social_account_id.in_(active_sa_ids))
-               .all())
-    by_sa = {a.social_account_id: a for a in existing}
-
-    for sa_id in active_sa_ids:
-        ta = by_sa.get(sa_id)
-        if ta is None:
-            ta = TaskAction(task_id=task_id, social_account_id=sa_id)
-            db.add(ta)
-        ta.liked = value
-        ta.shared = value
-        ta.commented = value
-        ta.followed = value
-
+def set_force_completed(db: Session, task_id: int, value: bool) -> Task:
+    """Cierra (o reabre) la tarea manualmente para que el listado la muestre
+    al 100%, SIN tocar los task_actions: el progreso real de cada perfil
+    queda intacto, tal cual estaba marcado."""
     task = get_task(db, task_id)
-    if task:
-        task.updated_at = datetime.now(timezone.utc)
+    task.force_completed = value
+    task.updated_at = datetime.now(timezone.utc)
     db.commit()
+    db.refresh(task)
+    return task
 
 
 def reset_task_actions(db: Session, task_id: int) -> int:
@@ -220,9 +194,13 @@ def list_all(db: Session) -> list[TaskHistoryItem]:
     for order_number, t in enumerate(tasks, start=1):
         rows = build_persona_rows(db, t.id)
         done, total = _completion(rows)
+        display_percent = 100 if t.force_completed else (
+            round((done / total) * 100) if total > 0 else 0
+        )
         items.append(TaskHistoryItem(
             id=t.id, order_number=order_number, link=t.link, comment=t.comment,
             created_at=t.created_at, updated_at=t.updated_at,
             completed_count=done, total_count=total,
+            force_completed=t.force_completed, display_percent=display_percent,
         ))
     return items

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, DateTime
+from sqlalchemy import Column, Integer, Text, DateTime, Boolean
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -14,6 +14,9 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     link = Column(Text, nullable=False, default="")
     comment = Column(Text, nullable=True)
+    # cierre manual de la tarea: NO toca task_actions, solo hace que el
+    # listado la muestre al 100% aunque el progreso real sea otro.
+    force_completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     # se actualiza en cada edición (link, toggle de acción, reset): permite
     # ordenar la lista por "trabajada más recientemente"
