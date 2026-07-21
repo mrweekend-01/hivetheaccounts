@@ -24,6 +24,13 @@ class TaskPersonaRow(BaseModel):
     platforms: list[TaskActionPlatform]   # SIEMPRE 3, orden: facebook, instagram, tiktok
 
 
+class TaskSummary(BaseModel):
+    total_likes: int
+    total_shares: int
+    total_comments: int
+    total_follows: int
+
+
 class TaskDetail(BaseModel):
     """Detalle completo y editable de una tarea puntual (se usa tanto recién
     creada como al reabrir cualquier tarea de la lista)."""
@@ -31,8 +38,11 @@ class TaskDetail(BaseModel):
     link: str
     comment: str | None = None
     force_completed: bool = False
+    client_id: int | None = None
+    client_name: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
+    summary: TaskSummary
     rows: list[TaskPersonaRow]   # TODOS los perfiles, lista plana sin agrupar por celular
 
 
@@ -47,3 +57,5 @@ class TaskHistoryItem(BaseModel):
     total_count: int       # (redes activas de cada persona) * 4, sobre todas las personas
     force_completed: bool = False   # cierre manual: no altera completed_count/total_count
     display_percent: int   # 100 si force_completed, si no el % real (completed_count/total_count)
+    client_id: int | None = None
+    client_name: str | None = None

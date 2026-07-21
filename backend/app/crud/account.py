@@ -3,7 +3,7 @@ from app.models.account import Account
 from app.models.device import Device
 from app.models.social_account import SocialAccount
 from app.core.enums import Platform, PresenceState
-from app.schemas.account import AccountCreate, AccountUpdate, SocialsPresence
+from app.schemas.account import AccountCreate, AccountUpdate, SocialsPresence, AccountsSummary
 from app.core.crypto import encrypt, decrypt
 from app.core.config import settings
 
@@ -54,6 +54,25 @@ def socials_presence(account: Account) -> SocialsPresence:
         facebook=_presence_for(account, Platform.facebook),
         instagram=_presence_for(account, Platform.instagram),
         tiktok=_presence_for(account, Platform.tiktok),
+    )
+
+
+def summary(db: Session) -> AccountsSummary:
+    accounts = _query(db).all()
+    counts = {p: {"activa": 0, "pendiente": 0} for p in Platform}
+    for account in accounts:
+        for p in Platform:
+            state = _presence_for(account, p)
+            if state in counts[p]:
+                counts[p][state] += 1
+    return AccountsSummary(
+        total_accounts=len(accounts),
+        facebook_active=counts[Platform.facebook]["activa"],
+        instagram_active=counts[Platform.instagram]["activa"],
+        tiktok_active=counts[Platform.tiktok]["activa"],
+        facebook_pending=counts[Platform.facebook]["pendiente"],
+        instagram_pending=counts[Platform.instagram]["pendiente"],
+        tiktok_pending=counts[Platform.tiktok]["pendiente"],
     )
 
 

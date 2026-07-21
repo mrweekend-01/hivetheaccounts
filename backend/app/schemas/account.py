@@ -21,6 +21,16 @@ class SocialsPresence(BaseModel):
     tiktok: PresenceState = PresenceState.no_existe
 
 
+class AccountsSummary(BaseModel):
+    total_accounts: int
+    facebook_active: int
+    instagram_active: int
+    tiktok_active: int
+    facebook_pending: int
+    instagram_pending: int
+    tiktok_pending: int
+
+
 class AccountListItem(BaseModel):
     """Fila de la tabla: sin credenciales, con semáforo de redes."""
     model_config = ConfigDict(from_attributes=True)

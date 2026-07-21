@@ -123,6 +123,21 @@ body {
   .progress-fill.work { @apply bg-warn; }
   .progress-fill.go   { @apply bg-ok; }
 
+  /* ---- Cuentas: mini-dashboard de resumen (arriba de la tabla) ----
+     Mismo lenguaje que "port": mono + lámpara de estado, pero como tarjeta
+     de conteo en vez de indicador binario -- un vistazo dice cuántas redes
+     están listas (verde) vs. pendientes de credenciales (ámbar) por
+     plataforma, sin escanear la tabla entera. */
+  .stat-tile {
+    @apply flex flex-col gap-2 rounded-lg bg-hive-panel2 border border-hive-border
+           px-4 py-3 min-w-[140px];
+  }
+  .stat-tile-label {
+    @apply font-mono text-[10px] font-bold uppercase tracking-wide text-hive-muted;
+  }
+  .stat-tile-value { @apply font-mono text-2xl font-extrabold tabular-nums leading-none; }
+  .stat-tile-sub   { @apply text-[10px] uppercase tracking-wide text-hive-muted; }
+
   /* ---- Urgent Task: tablero kanban de administradores ----
      Dos ejes de color independientes y deliberados: la COLUMNA cuenta el
      estado (gris/ámbar/verde, mismo lenguaje semántico que el resto de la

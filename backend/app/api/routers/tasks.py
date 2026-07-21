@@ -19,6 +19,7 @@ class TaskCreateBody(BaseModel):
 class LinkUpdate(BaseModel):
     link: str | None = None
     comment: str | None = None
+    client_id: int | None = None
 
 
 class ActionUpdate(BaseModel):
@@ -35,9 +36,13 @@ def _detail(db: Session, task_id: int) -> TaskDetail:
     if not task:
         raise HTTPException(404, "Tarea no encontrada")
     rows = crud.build_persona_rows(db, task.id)
+    summary = crud.compute_summary(db, task.id)
     return TaskDetail(id=task.id, link=task.link, comment=task.comment,
                       force_completed=task.force_completed,
-                      created_at=task.created_at, updated_at=task.updated_at, rows=rows)
+                      client_id=task.client_id,
+                      client_name=task.client.name if task.client else None,
+                      created_at=task.created_at, updated_at=task.updated_at,
+                      summary=summary, rows=rows)
 
 
 @router.get("", response_model=list[TaskHistoryItem])
@@ -68,6 +73,7 @@ def update_task(task_id: int, data: LinkUpdate, db: Session = Depends(get_db),
         db, task_id,
         link=data.link if "link" in fields_set else None,
         comment=data.comment if "comment" in fields_set else ...,
+        client_id=data.client_id if "client_id" in fields_set else ...,
     )
     return _detail(db, task_id)
 

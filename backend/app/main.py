@@ -5,7 +5,7 @@ from app.core.config import settings
 from app.scheduler import scheduler
 from app.api.routers import (auth, accounts, proxies, devices,
                              humanization, humanization_schedules, tasks, urgent_tasks,
-                             users, export, settings as settings_router)
+                             users, export, settings as settings_router, clients)
 
 
 @asynccontextmanager
@@ -36,6 +36,7 @@ app.include_router(urgent_tasks.router)
 app.include_router(users.router)
 app.include_router(export.router)
 app.include_router(settings_router.router)
+app.include_router(clients.router)
 
 
 @app.get("/health", tags=["meta"])

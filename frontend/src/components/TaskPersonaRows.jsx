@@ -10,7 +10,7 @@ function rowCompletion(row) {
 
 // Lista plana de personas con sus 3 redes y sus acciones. Sin onToggle queda
 // de solo lectura (usado en el detalle de historial).
-export default function TaskPersonaRows({ rows, onToggle, onToggleAll }) {
+export default function TaskPersonaRows({ rows, onToggle, onToggleAll, onViewDetails }) {
   if (rows.length === 0) {
     return <p className="text-hive-muted py-10 text-center">No hay perfiles todavía.</p>;
   }
@@ -38,6 +38,12 @@ export default function TaskPersonaRows({ rows, onToggle, onToggleAll }) {
                     : undefined} />
               ))}
             </div>
+            {onViewDetails && (
+              <button type="button" className="btn-ghost text-xs px-2 py-1.5 shrink-0"
+                onClick={() => onViewDetails(row.account_id)}>
+                Ver detalles
+              </button>
+            )}
             {onToggleAll && (
               <button type="button" className="btn-ghost text-xs px-2 py-1.5 shrink-0"
                 disabled={total === 0} title={total === 0 ? "Sin redes activas" : undefined}

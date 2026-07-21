@@ -4,7 +4,7 @@ from app.core.database import get_db
 from app.core.enums import Role
 from app.crud import account as crud
 from app.schemas.account import (AccountListItem, AccountDetail, AccountCreate,
-                                 AccountUpdate)
+                                 AccountUpdate, AccountsSummary)
 from app.schemas.social_account import SocialAccountReveal
 from app.schemas.proxy import ProxyReveal
 from app.core.crypto import decrypt
@@ -34,6 +34,11 @@ def list_accounts(platform: str | None = None, status: str | None = None,
     rows = crud.list_accounts(db, platform=platform, status=status,
                               device_id=device_id, boxphone=boxphone, search=search)
     return [_list_item(a) for a in rows]
+
+
+@router.get("/summary", response_model=AccountsSummary)
+def accounts_summary(db: Session = Depends(get_db), _=Depends(get_current_user)):
+    return crud.summary(db)
 
 
 @router.get("/{account_id}", response_model=AccountDetail)

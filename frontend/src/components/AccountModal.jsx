@@ -32,7 +32,7 @@ export default function AccountModal({ accountId, onClose, onEdit, onPersonality
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold">{data.profile_name}</h3>
-              {can.edit && <button className="btn-ghost text-xs" onClick={() => onPersonality(data)}>Personalidad</button>}
+              {can.edit && onPersonality && <button className="btn-ghost text-xs" onClick={() => onPersonality(data)}>Personalidad</button>}
             </div>
             {data.corporate_email && <p className="text-hive-muted text-sm font-mono">{data.corporate_email}</p>}
             <div className="flex items-center gap-2 mt-1">
@@ -100,7 +100,7 @@ export default function AccountModal({ accountId, onClose, onEdit, onPersonality
           )}
         </div>
 
-        {can.reveal && (
+        {can.reveal && onEdit && (
           <div className="flex justify-end mt-6">
             <button className="btn-primary" onClick={() => onEdit(data)}>Editar</button>
           </div>

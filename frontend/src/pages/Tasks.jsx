@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client";
 import TaskPersonaRows from "../components/TaskPersonaRows";
+import AccountModal from "../components/AccountModal";
 import { useAuth } from "../context/AuthContext";
 
 function fmtDate(iso) {
@@ -44,14 +45,23 @@ export default function Tasks() {
   const [creating, setCreating] = useState(false);
   const [f, setF] = useState({ search: "", platform: "", status: "", device_id: "", boxphone: "" });
   const [listSearch, setListSearch] = useState("");
+  const [clientFilter, setClientFilter] = useState("");
   const [commentOpenId, setCommentOpenId] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
+  const [clients, setClients] = useState([]);
+  const [creatingClient, setCreatingClient] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+  const [viewAccountId, setViewAccountId] = useState(null);
 
   function loadList() {
     return api.get("/tasks").then((r) => setList(r.data));
   }
 
-  useEffect(() => { loadList(); }, []);
+  function loadClients() {
+    return api.get("/clients").then((r) => setClients(r.data));
+  }
+
+  useEffect(() => { loadList(); loadClients(); }, []);
 
   async function openDetail(id) {
     const r = await api.get(`/tasks/${id}`);
@@ -156,6 +166,30 @@ export default function Tasks() {
         : item));
   }
 
+  async function persistClientId(clientId) {
+    const r = await api.put(`/tasks/${detail.id}`, { client_id: clientId });
+    setDetail(r.data);
+  }
+
+  function handleClientSelect(e) {
+    const v = e.target.value;
+    if (v === "__new__") {
+      setNewClientName("");
+      setCreatingClient(true);
+      return;
+    }
+    persistClientId(v ? Number(v) : null);
+  }
+
+  async function handleCreateClient() {
+    const name = newClientName.trim();
+    if (!name) return;
+    const r = await api.post("/clients", { name });
+    setClients((prev) => [...prev, r.data].sort((a, b) => a.name.localeCompare(b.name)));
+    setCreatingClient(false);
+    await persistClientId(r.data.id);
+  }
+
   const deviceOptions = detail
     ? [...new Map(detail.rows.filter((r) => r.device_id != null).map((r) => [r.device_id, r.device_label])).entries()]
     : [];
@@ -179,9 +213,12 @@ export default function Tasks() {
       })
     : [];
 
-  const filteredList = listSearch
-    ? list.filter((t) => (t.link || "").toLowerCase().includes(listSearch.toLowerCase()))
-    : list;
+  const filteredList = list.filter((t) => {
+    if (listSearch && !(t.link || "").toLowerCase().includes(listSearch.toLowerCase())) return false;
+    if (clientFilter === "none" && t.client_id != null) return false;
+    if (clientFilter && clientFilter !== "none" && String(t.client_id) !== clientFilter) return false;
+    return true;
+  });
 
   return (
     <div>
@@ -199,6 +236,11 @@ export default function Tasks() {
           <div className="card p-3 mb-4 flex flex-wrap gap-3">
             <input className="input flex-1 min-w-[180px]" placeholder="Buscar por link…"
               value={listSearch} onChange={(e) => setListSearch(e.target.value)} />
+            <select className="input w-auto" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)}>
+              <option value="">Todos los clientes</option>
+              <option value="none">Sin cliente</option>
+              {clients.map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+            </select>
           </div>
 
           <div className="card divide-y divide-hive-border">
@@ -216,6 +258,9 @@ export default function Tasks() {
                     <span className="font-mono text-sm text-hive-text truncate flex-1 min-w-0"
                       title={t.link}>
                       {truncateLink(t.link)}
+                    </span>
+                    <span className={`chip shrink-0 ${t.client_name ? "bg-hive-panel2 text-hive-text" : "bg-hive-panel2 text-hive-muted"}`}>
+                      {t.client_name || "Sin cliente"}
                     </span>
                     <button type="button"
                       className={`btn-ghost text-xs px-2 py-1.5 shrink-0 ${hasComment ? "text-hive-accent" : "text-hive-muted"}`}
@@ -279,7 +324,7 @@ export default function Tasks() {
             ‹ Volver a Los Task
           </button>
 
-          <div className="flex items-end gap-3 mb-4">
+          <div className="flex items-end gap-3 mb-3">
             <div className="flex-1">
               <label className="label mb-1">Link de la publicación</label>
               <input className="input text-base" value={linkDraft}
@@ -287,9 +332,32 @@ export default function Tasks() {
                 onBlur={persistLinkIfNeeded}
                 placeholder="https://facebook.com/…" />
             </div>
+            <div className="w-56">
+              <label className="label mb-1">Cliente</label>
+              <select className="input" value={detail.client_id ?? ""} onChange={handleClientSelect}>
+                <option value="">Sin cliente</option>
+                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="__new__">+ Nuevo cliente</option>
+              </select>
+            </div>
             <button className="btn-ghost" onClick={handleResetChecklist}>
               Reiniciar checklist
             </button>
+          </div>
+
+          {creatingClient && (
+            <div className="flex items-center gap-2 mb-3">
+              <input className="input flex-1 max-w-xs" autoFocus placeholder="Nombre del nuevo cliente…"
+                value={newClientName} onChange={(e) => setNewClientName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreateClient(); }} />
+              <button className="btn-primary" onClick={handleCreateClient}>Crear</button>
+              <button className="btn-ghost" onClick={() => setCreatingClient(false)}>Cancelar</button>
+            </div>
+          )}
+
+          <div className="text-sm text-hive-muted mb-4">
+            ❤️ {detail.summary.total_likes} likes · 🔁 {detail.summary.total_shares} compartidos ·
+            {" "}💬 {detail.summary.total_comments} comentarios · ➕ {detail.summary.total_follows} follows
           </div>
 
           <div className="card p-3 mb-4 flex flex-wrap gap-3">
@@ -318,8 +386,13 @@ export default function Tasks() {
             </select>
           </div>
 
-          <TaskPersonaRows rows={filteredRows} onToggle={handleToggle} onToggleAll={handleToggleAll} />
+          <TaskPersonaRows rows={filteredRows} onToggle={handleToggle} onToggleAll={handleToggleAll}
+            onViewDetails={setViewAccountId} />
         </div>
+      )}
+
+      {viewAccountId && (
+        <AccountModal accountId={viewAccountId} onClose={() => setViewAccountId(null)} />
       )}
     </div>
   );

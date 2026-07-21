@@ -13,6 +13,7 @@ export default function Accounts() {
   const { can } = useAuth();
   const [rows, setRows] = useState([]);
   const [devices, setDevices] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [f, setF] = useState({ platform: "", status: "", device_id: "", boxphone: "", search: "" });
   const [openId, setOpenId] = useState(null);
   const [formFor, setFormFor] = useState(undefined); // undefined=cerrado, null=nuevo, obj=editar
@@ -21,6 +22,7 @@ export default function Accounts() {
   const load = useCallback(() => {
     const params = Object.fromEntries(Object.entries(f).filter(([, v]) => v));
     api.get("/accounts", { params }).then((r) => setRows(r.data));
+    api.get("/accounts/summary").then((r) => setSummary(r.data));
   }, [f]);
 
   useEffect(() => { load(); }, [load]);
@@ -52,6 +54,37 @@ export default function Accounts() {
           {can.edit && <button className="btn-primary" onClick={() => setFormFor(null)}>+ Nueva cuenta</button>}
         </div>
       </div>
+
+      {summary && (
+        <div className="flex flex-wrap gap-3 mb-4">
+          <div className="stat-tile">
+            <span className="stat-tile-label">Total cuentas</span>
+            <span className="stat-tile-value text-hive-text">{summary.total_accounts}</span>
+          </div>
+          {[
+            { label: "Facebook", tag: "FB", active: summary.facebook_active, pending: summary.facebook_pending },
+            { label: "Instagram", tag: "IG", active: summary.instagram_active, pending: summary.instagram_pending },
+            { label: "TikTok", tag: "TT", active: summary.tiktok_active, pending: summary.tiktok_pending },
+          ].map((p) => (
+            <div key={p.tag} className="stat-tile">
+              <div className="flex items-center justify-between gap-3">
+                <span className="stat-tile-label">{p.label}</span>
+                <span className="font-mono text-[10px] font-bold text-hive-muted">{p.tag}</span>
+              </div>
+              <div className="flex items-end gap-4">
+                <div>
+                  <div className="stat-tile-value text-ok">{p.active}</div>
+                  <div className="stat-tile-sub">activas</div>
+                </div>
+                <div>
+                  <div className="stat-tile-value text-warn">{p.pending}</div>
+                  <div className="stat-tile-sub">pendientes</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="card p-3 mb-4 flex flex-wrap gap-3">

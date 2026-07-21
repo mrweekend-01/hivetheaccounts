@@ -4,7 +4,7 @@ from app.models.task import Task
 from app.models.task_action import TaskAction
 from app.models.account import Account
 from app.core.enums import Platform
-from app.schemas.task import TaskActionPlatform, TaskPersonaRow, TaskHistoryItem
+from app.schemas.task import TaskActionPlatform, TaskPersonaRow, TaskHistoryItem, TaskSummary
 
 PLATFORM_ORDER = [Platform.facebook, Platform.instagram, Platform.tiktok]
 
@@ -24,15 +24,18 @@ def get_task(db: Session, task_id: int) -> Task | None:
 
 
 def update_task_fields(db: Session, task_id: int, link: str | None = None,
-                       comment: str | None = ...) -> Task:
-    """Actualiza link y/o comment de forma independiente: cada uno solo se
-    toca si se pasó explícitamente (comment usa `...` como centinela de
-    'no tocar' porque None es un valor válido para borrar el comentario)."""
+                       comment: str | None = ..., client_id: int | None = ...) -> Task:
+    """Actualiza link, comment y/o client_id de forma independiente: cada uno
+    solo se toca si se pasó explícitamente (comment y client_id usan `...`
+    como centinela de 'no tocar' porque None es un valor válido para
+    borrarlos)."""
     task = get_task(db, task_id)
     if link is not None:
         task.link = link
     if comment is not ...:
         task.comment = comment
+    if client_id is not ...:
+        task.client_id = client_id
     task.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(task)
@@ -173,6 +176,16 @@ def build_persona_rows(db: Session, task_id: int) -> list[TaskPersonaRow]:
     return rows
 
 
+def compute_summary(db: Session, task_id: int) -> TaskSummary:
+    actions = db.query(TaskAction).filter(TaskAction.task_id == task_id).all()
+    return TaskSummary(
+        total_likes=sum(1 for a in actions if a.liked),
+        total_shares=sum(1 for a in actions if a.shared),
+        total_comments=sum(1 for a in actions if a.commented),
+        total_follows=sum(1 for a in actions if a.followed),
+    )
+
+
 def _completion(rows: list[TaskPersonaRow]) -> tuple[int, int]:
     total = 0
     done = 0
@@ -189,7 +202,8 @@ def _completion(rows: list[TaskPersonaRow]) -> tuple[int, int]:
 def list_all(db: Session) -> list[TaskHistoryItem]:
     # orden fijo desde la creación: created_at nunca cambia, así que las
     # tareas nunca cambian de posición al avanzar su progreso.
-    tasks = db.query(Task).order_by(Task.created_at.asc()).all()
+    tasks = (db.query(Task).options(joinedload(Task.client))
+            .order_by(Task.created_at.asc()).all())
     items: list[TaskHistoryItem] = []
     for order_number, t in enumerate(tasks, start=1):
         rows = build_persona_rows(db, t.id)
@@ -202,5 +216,6 @@ def list_all(db: Session) -> list[TaskHistoryItem]:
             created_at=t.created_at, updated_at=t.updated_at,
             completed_count=done, total_count=total,
             force_completed=t.force_completed, display_percent=display_percent,
+            client_id=t.client_id, client_name=t.client.name if t.client else None,
         ))
     return items

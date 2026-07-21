@@ -9,6 +9,7 @@ from app.models.task import Task
 from app.models.task_action import TaskAction
 from app.models.humanization_schedule import HumanizationSchedule
 from app.models.urgent_task import UrgentTask
+from app.models.client import Client
 
 __all__ = ["Base", "User", "Proxy", "Device", "Account", "SocialAccount", "AppSettings",
-          "Task", "TaskAction", "HumanizationSchedule", "UrgentTask"]
+          "Task", "TaskAction", "HumanizationSchedule", "UrgentTask", "Client"]
