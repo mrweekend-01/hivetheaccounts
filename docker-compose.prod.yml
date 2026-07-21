@@ -42,7 +42,7 @@ services:
       HUMANIZATION_MINUTES: ${HUMANIZATION_MINUTES}
       CORS_ORIGINS: ${CORS_ORIGINS}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     command: >
       sh -c "alembic upgrade head &&
              python -m app.seed &&
@@ -59,7 +59,7 @@ services:
       # backend -- normalmente la IP de la PC de Roberto en su red local
       API_URL: ${API_URL}
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-8080}:80"
 
   watchtower:
     image: containrrr/watchtower
