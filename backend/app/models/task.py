@@ -13,6 +13,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     link = Column(Text, nullable=False, default="")
+    comment = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     # se actualiza en cada edición (link, toggle de acción, reset): permite
     # ordenar la lista por "trabajada más recientemente"

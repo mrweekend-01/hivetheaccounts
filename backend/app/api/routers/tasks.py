@@ -17,11 +17,16 @@ class TaskCreateBody(BaseModel):
 
 
 class LinkUpdate(BaseModel):
-    link: str
+    link: str | None = None
+    comment: str | None = None
 
 
 class ActionUpdate(BaseModel):
     field: str
+    value: bool
+
+
+class CompleteBody(BaseModel):
     value: bool
 
 
@@ -30,8 +35,8 @@ def _detail(db: Session, task_id: int) -> TaskDetail:
     if not task:
         raise HTTPException(404, "Tarea no encontrada")
     rows = crud.build_persona_rows(db, task.id)
-    return TaskDetail(id=task.id, link=task.link, created_at=task.created_at,
-                      updated_at=task.updated_at, rows=rows)
+    return TaskDetail(id=task.id, link=task.link, comment=task.comment,
+                      created_at=task.created_at, updated_at=task.updated_at, rows=rows)
 
 
 @router.get("", response_model=list[TaskHistoryItem])
@@ -53,11 +58,16 @@ def get_task(task_id: int, db: Session = Depends(get_db),
 
 
 @router.put("/{task_id}", response_model=TaskDetail)
-def update_link(task_id: int, data: LinkUpdate, db: Session = Depends(get_db),
+def update_task(task_id: int, data: LinkUpdate, db: Session = Depends(get_db),
                 _=Depends(get_current_user)):
     if not crud.get_task(db, task_id):
         raise HTTPException(404, "Tarea no encontrada")
-    crud.update_link(db, task_id, data.link)
+    fields_set = data.model_fields_set
+    crud.update_task_fields(
+        db, task_id,
+        link=data.link if "link" in fields_set else None,
+        comment=data.comment if "comment" in fields_set else ...,
+    )
     return _detail(db, task_id)
 
 
@@ -87,6 +97,15 @@ def toggle_all_actions(task_id: int, account_id: int, db: Session = Depends(get_
     if not crud.get_task(db, task_id):
         raise HTTPException(404, "Tarea no encontrada")
     crud.toggle_all_for_persona(db, task_id, account_id)
+    return _detail(db, task_id)
+
+
+@router.post("/{task_id}/complete", response_model=TaskDetail)
+def complete_task(task_id: int, data: CompleteBody, db: Session = Depends(get_db),
+                  _=Depends(get_current_user)):
+    if not crud.get_task(db, task_id):
+        raise HTTPException(404, "Tarea no encontrada")
+    crud.mark_task_complete(db, task_id, data.value)
     return _detail(db, task_id)
 
 

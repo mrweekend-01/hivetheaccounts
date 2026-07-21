@@ -29,6 +29,7 @@ class TaskDetail(BaseModel):
     creada como al reabrir cualquier tarea de la lista)."""
     id: int
     link: str
+    comment: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
     rows: list[TaskPersonaRow]   # TODOS los perfiles, lista plana sin agrupar por celular
@@ -36,7 +37,9 @@ class TaskDetail(BaseModel):
 
 class TaskHistoryItem(BaseModel):
     id: int
+    order_number: int      # posición 1-indexada, fija desde la creación (por created_at asc)
     link: str
+    comment: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
     completed_count: int   # liked+shared+commented+followed=True en TODAS las redes activas

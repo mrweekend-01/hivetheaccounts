@@ -23,9 +23,16 @@ def get_task(db: Session, task_id: int) -> Task | None:
     return db.query(Task).filter(Task.id == task_id).first()
 
 
-def update_link(db: Session, task_id: int, link: str) -> Task:
+def update_task_fields(db: Session, task_id: int, link: str | None = None,
+                       comment: str | None = ...) -> Task:
+    """Actualiza link y/o comment de forma independiente: cada uno solo se
+    toca si se pasó explícitamente (comment usa `...` como centinela de
+    'no tocar' porque None es un valor válido para borrar el comentario)."""
     task = get_task(db, task_id)
-    task.link = link
+    if link is not None:
+        task.link = link
+    if comment is not ...:
+        task.comment = comment
     task.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(task)
@@ -90,6 +97,44 @@ def toggle_all_for_persona(db: Session, task_id: int, account_id: int) -> None:
         ta.shared = new_value
         ta.commented = new_value
         ta.followed = new_value
+
+    task = get_task(db, task_id)
+    if task:
+        task.updated_at = datetime.now(timezone.utc)
+    db.commit()
+
+
+def mark_task_complete(db: Session, task_id: int, value: bool) -> None:
+    """Marca (o desmarca) liked/shared/commented/followed en `value` para
+    TODAS las redes activas de TODAS las personas de la tarea, de una sola
+    vez (mismo criterio que toggle_all_for_persona pero para todas las
+    personas juntas, no una por una)."""
+    accounts = (db.query(Account)
+               .options(joinedload(Account.social_accounts))
+               .all())
+    active_sa_ids: list[int] = []
+    for acc in accounts:
+        active_sa_ids.extend(
+            sa.id for sa in acc.social_accounts if sa.username and sa.password_encrypted
+        )
+    if not active_sa_ids:
+        return
+
+    existing = (db.query(TaskAction)
+               .filter(TaskAction.task_id == task_id,
+                       TaskAction.social_account_id.in_(active_sa_ids))
+               .all())
+    by_sa = {a.social_account_id: a for a in existing}
+
+    for sa_id in active_sa_ids:
+        ta = by_sa.get(sa_id)
+        if ta is None:
+            ta = TaskAction(task_id=task_id, social_account_id=sa_id)
+            db.add(ta)
+        ta.liked = value
+        ta.shared = value
+        ta.commented = value
+        ta.followed = value
 
     task = get_task(db, task_id)
     if task:
@@ -168,13 +213,16 @@ def _completion(rows: list[TaskPersonaRow]) -> tuple[int, int]:
 
 
 def list_all(db: Session) -> list[TaskHistoryItem]:
-    tasks = db.query(Task).order_by(Task.updated_at.desc()).all()
+    # orden fijo desde la creación: created_at nunca cambia, así que las
+    # tareas nunca cambian de posición al avanzar su progreso.
+    tasks = db.query(Task).order_by(Task.created_at.asc()).all()
     items: list[TaskHistoryItem] = []
-    for t in tasks:
+    for order_number, t in enumerate(tasks, start=1):
         rows = build_persona_rows(db, t.id)
         done, total = _completion(rows)
         items.append(TaskHistoryItem(
-            id=t.id, link=t.link, created_at=t.created_at, updated_at=t.updated_at,
+            id=t.id, order_number=order_number, link=t.link, comment=t.comment,
+            created_at=t.created_at, updated_at=t.updated_at,
             completed_count=done, total_count=total,
         ))
     return items

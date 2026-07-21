@@ -26,6 +26,22 @@ function progress(item) {
   return { pct, label: `${item.completed_count}/${item.total_count} · ${pct}%`, cls };
 }
 
+function isTaskComplete(item) {
+  return item.total_count > 0 && item.completed_count === item.total_count;
+}
+
+function completionFromRows(rows) {
+  let total = 0, done = 0;
+  for (const row of rows) {
+    for (const p of row.platforms) {
+      if (!p.active) continue;
+      total += 4;
+      done += (p.liked ? 1 : 0) + (p.shared ? 1 : 0) + (p.commented ? 1 : 0) + (p.followed ? 1 : 0);
+    }
+  }
+  return { done, total };
+}
+
 export default function Tasks() {
   const { can } = useAuth();
   const [view, setView] = useState("list");   // "list" | "detail"
@@ -34,6 +50,9 @@ export default function Tasks() {
   const [linkDraft, setLinkDraft] = useState("");
   const [creating, setCreating] = useState(false);
   const [f, setF] = useState({ search: "", platform: "", status: "", device_id: "", boxphone: "" });
+  const [listSearch, setListSearch] = useState("");
+  const [commentOpenId, setCommentOpenId] = useState(null);
+  const [commentDraft, setCommentDraft] = useState("");
 
   function loadList() {
     return api.get("/tasks").then((r) => setList(r.data));
@@ -102,6 +121,44 @@ export default function Tasks() {
     setDetail(r.data);
   }
 
+  function toggleCommentBox(e, t) {
+    e.stopPropagation();
+    if (commentOpenId === t.id) {
+      setCommentOpenId(null);
+      return;
+    }
+    setCommentDraft(t.comment || "");
+    setCommentOpenId(t.id);
+  }
+
+  async function saveComment(id) {
+    await api.put(`/tasks/${id}`, { comment: commentDraft });
+    setList((prev) => prev.map((t) => (t.id === id ? { ...t, comment: commentDraft } : t)));
+    setCommentOpenId(null);
+  }
+
+  function handleCommentKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.target.blur();
+    }
+  }
+
+  async function handleComplete(e, t) {
+    e.stopPropagation();
+    const complete = isTaskComplete(t);
+    const msg = complete
+      ? "¿Desmarcar toda esta tarea? Se quitarán todas las acciones completadas."
+      : "¿Marcar toda esta tarea como completada al 100%?";
+    if (!confirm(msg)) return;
+    const r = await api.post(`/tasks/${t.id}/complete`, { value: !complete });
+    const { done, total } = completionFromRows(r.data.rows);
+    setList((prev) => prev.map((item) =>
+      item.id === t.id
+        ? { ...item, completed_count: done, total_count: total, updated_at: r.data.updated_at }
+        : item));
+  }
+
   const deviceOptions = detail
     ? [...new Map(detail.rows.filter((r) => r.device_id != null).map((r) => [r.device_id, r.device_label])).entries()]
     : [];
@@ -125,6 +182,10 @@ export default function Tasks() {
       })
     : [];
 
+  const filteredList = listSearch
+    ? list.filter((t) => (t.link || "").toLowerCase().includes(listSearch.toLowerCase()))
+    : list;
+
   return (
     <div>
       <h1 className="page-title mb-4">Tasks</h1>
@@ -138,41 +199,77 @@ export default function Tasks() {
             </button>
           </div>
 
+          <div className="card p-3 mb-4 flex flex-wrap gap-3">
+            <input className="input flex-1 min-w-[180px]" placeholder="Buscar por link…"
+              value={listSearch} onChange={(e) => setListSearch(e.target.value)} />
+          </div>
+
           <div className="card divide-y divide-hive-border">
-            {list.map((t) => {
+            {filteredList.map((t) => {
               const { pct, label, cls } = progress(t);
+              const complete = isTaskComplete(t);
+              const hasComment = !!(t.comment && t.comment.trim());
               return (
-                <div key={t.id} onClick={() => openDetail(t.id)} role="button" tabIndex={0}
-                  className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-hive-panel2/60 cursor-pointer">
-                  <span className="font-mono text-sm text-hive-text truncate flex-1 min-w-0"
-                    title={t.link}>
-                    {truncateLink(t.link)}
-                  </span>
-                  <span className="text-xs text-hive-muted shrink-0 w-32">
-                    {fmtDate(t.updated_at)}
-                  </span>
-                  <div className="flex items-center gap-2 shrink-0 w-48 justify-end">
-                    <div className="progress-track">
-                      {pct !== null && (
-                        <div className={`progress-fill ${cls}`} style={{ width: `${pct}%` }} />
-                      )}
-                    </div>
-                    <span className="text-xs font-mono text-hive-muted w-28 text-right">
-                      {label}
+                <div key={t.id}>
+                  <div onClick={() => openDetail(t.id)} role="button" tabIndex={0}
+                    className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-hive-panel2/60 cursor-pointer">
+                    <span className="font-mono text-xs text-hive-muted shrink-0 w-10">
+                      #{t.order_number}
                     </span>
-                  </div>
-                  {can.admin && (
-                    <button type="button" className="btn-ghost text-xs px-2 py-1.5 text-bad hover:bg-bad/10 shrink-0"
-                      title="Eliminar tarea" onClick={(e) => handleDelete(e, t.id)}>
-                      🗑
+                    <span className="font-mono text-sm text-hive-text truncate flex-1 min-w-0"
+                      title={t.link}>
+                      {truncateLink(t.link)}
+                    </span>
+                    <button type="button"
+                      className={`btn-ghost text-xs px-2 py-1.5 shrink-0 ${hasComment ? "text-hive-accent" : "text-hive-muted"}`}
+                      title={hasComment ? "Ver/editar comentario" : "Agregar comentario"}
+                      onClick={(e) => toggleCommentBox(e, t)}>
+                      {hasComment ? "📝" : "🗒️"}
                     </button>
+                    <span className="text-xs text-hive-muted shrink-0 w-32">
+                      {fmtDate(t.updated_at)}
+                    </span>
+                    <button type="button"
+                      className={`btn-ghost text-xs px-2 py-1.5 shrink-0 ${complete ? "text-ok" : "text-hive-muted"}`}
+                      title={complete ? "Desmarcar tarea completa" : "Marcar tarea completa"}
+                      onClick={(e) => handleComplete(e, t)}>
+                      {complete ? "✅" : "⬜"}
+                    </button>
+                    <div className="flex items-center gap-2 shrink-0 w-48 justify-end">
+                      <div className="progress-track">
+                        {pct !== null && (
+                          <div className={`progress-fill ${cls}`} style={{ width: `${pct}%` }} />
+                        )}
+                      </div>
+                      <span className="text-xs font-mono text-hive-muted w-28 text-right">
+                        {label}
+                      </span>
+                    </div>
+                    {can.admin && (
+                      <button type="button" className="btn-ghost text-xs px-2 py-1.5 text-bad hover:bg-bad/10 shrink-0"
+                        title="Eliminar tarea" onClick={(e) => handleDelete(e, t.id)}>
+                        🗑
+                      </button>
+                    )}
+                  </div>
+                  {commentOpenId === t.id && (
+                    <div className="px-4 pb-3 -mt-1" onClick={(e) => e.stopPropagation()}>
+                      <textarea className="input w-full text-sm" rows={2} autoFocus
+                        placeholder="Comentario para esta tarea…"
+                        value={commentDraft}
+                        onChange={(e) => setCommentDraft(e.target.value)}
+                        onBlur={() => saveComment(t.id)}
+                        onKeyDown={handleCommentKeyDown} />
+                    </div>
                   )}
                 </div>
               );
             })}
-            {list.length === 0 && (
+            {filteredList.length === 0 && (
               <p className="text-hive-muted py-10 text-center">
-                No hay tareas todavía. Creá la primera con "+ Nueva Task".
+                {list.length === 0
+                  ? 'No hay tareas todavía. Creá la primera con "+ Nueva Task".'
+                  : "Ninguna tarea coincide con la búsqueda."}
               </p>
             )}
           </div>
