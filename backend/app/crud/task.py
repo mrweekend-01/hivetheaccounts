@@ -24,11 +24,12 @@ def get_task(db: Session, task_id: int) -> Task | None:
 
 
 def update_task_fields(db: Session, task_id: int, link: str | None = None,
-                       comment: str | None = ..., client_id: int | None = ...) -> Task:
-    """Actualiza link, comment y/o client_id de forma independiente: cada uno
-    solo se toca si se pasó explícitamente (comment y client_id usan `...`
-    como centinela de 'no tocar' porque None es un valor válido para
-    borrarlos)."""
+                       comment: str | None = ..., client_id: int | None = ...,
+                       report_id: int | None = ...) -> Task:
+    """Actualiza link, comment, client_id y/o report_id de forma independiente:
+    cada uno solo se toca si se pasó explícitamente (comment, client_id y
+    report_id usan `...` como centinela de 'no tocar' porque None es un valor
+    válido para borrarlos)."""
     task = get_task(db, task_id)
     if link is not None:
         task.link = link
@@ -36,6 +37,8 @@ def update_task_fields(db: Session, task_id: int, link: str | None = None,
         task.comment = comment
     if client_id is not ...:
         task.client_id = client_id
+    if report_id is not ...:
+        task.report_id = report_id
     task.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(task)
@@ -202,7 +205,7 @@ def _completion(rows: list[TaskPersonaRow]) -> tuple[int, int]:
 def list_all(db: Session) -> list[TaskHistoryItem]:
     # orden fijo desde la creación: created_at nunca cambia, así que las
     # tareas nunca cambian de posición al avanzar su progreso.
-    tasks = (db.query(Task).options(joinedload(Task.client))
+    tasks = (db.query(Task).options(joinedload(Task.client), joinedload(Task.report))
             .order_by(Task.created_at.asc()).all())
     items: list[TaskHistoryItem] = []
     for order_number, t in enumerate(tasks, start=1):
@@ -217,5 +220,6 @@ def list_all(db: Session) -> list[TaskHistoryItem]:
             completed_count=done, total_count=total,
             force_completed=t.force_completed, display_percent=display_percent,
             client_id=t.client_id, client_name=t.client.name if t.client else None,
+            report_id=t.report_id, report_name=t.report.name if t.report else None,
         ))
     return items

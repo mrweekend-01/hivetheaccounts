@@ -19,6 +19,7 @@ class Task(Base):
     # listado la muestre al 100% aunque el progreso real sea otro.
     force_completed = Column(Boolean, default=False, nullable=False)
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True)
+    report_id = Column(Integer, ForeignKey("reports.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     # se actualiza en cada edición (link, toggle de acción, reset): permite
     # ordenar la lista por "trabajada más recientemente"
@@ -26,3 +27,4 @@ class Task(Base):
                         onupdate=func.now())
 
     client = relationship("Client")
+    report = relationship("Report")

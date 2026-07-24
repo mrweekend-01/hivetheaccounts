@@ -18,6 +18,13 @@ def create(db: Session, name: str) -> Client:
     return client
 
 
+def update(db: Session, client: Client, name: str) -> Client:
+    client.name = name
+    db.commit()
+    db.refresh(client)
+    return client
+
+
 def delete(db: Session, client: Client) -> None:
     db.delete(client)   # tasks.client_id queda en NULL por el ondelete
     db.commit()

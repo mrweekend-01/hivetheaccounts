@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.crud import client as crud
-from app.schemas.client import ClientOut, ClientCreate
+from app.schemas.client import ClientOut, ClientCreate, ClientUpdate
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -18,6 +18,19 @@ def create_client(data: ClientCreate, db: Session = Depends(get_db),
                   _=Depends(get_current_user)):
     try:
         return crud.create(db, data.name)
+    except Exception:
+        db.rollback()
+        raise HTTPException(400, "Ya existe un cliente con ese nombre")
+
+
+@router.put("/{client_id}", response_model=ClientOut)
+def update_client(client_id: int, data: ClientUpdate, db: Session = Depends(get_db),
+                  _=Depends(get_current_user)):
+    client = crud.get(db, client_id)
+    if not client:
+        raise HTTPException(404, "Cliente no encontrado")
+    try:
+        return crud.update(db, client, data.name)
     except Exception:
         db.rollback()
         raise HTTPException(400, "Ya existe un cliente con ese nombre")

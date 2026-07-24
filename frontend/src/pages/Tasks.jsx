@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/client";
 import TaskPersonaRows from "../components/TaskPersonaRows";
 import AccountModal from "../components/AccountModal";
+import CatalogManagerModal from "../components/CatalogManagerModal";
 import { useAuth } from "../context/AuthContext";
 
 function fmtDate(iso) {
@@ -46,11 +47,16 @@ export default function Tasks() {
   const [f, setF] = useState({ search: "", platform: "", status: "", device_id: "", boxphone: "" });
   const [listSearch, setListSearch] = useState("");
   const [clientFilter, setClientFilter] = useState("");
+  const [reportFilter, setReportFilter] = useState("");
   const [commentOpenId, setCommentOpenId] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [clients, setClients] = useState([]);
   const [creatingClient, setCreatingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
+  const [reports, setReports] = useState([]);
+  const [creatingReport, setCreatingReport] = useState(false);
+  const [newReportName, setNewReportName] = useState("");
+  const [managingCatalogs, setManagingCatalogs] = useState(false);
   const [viewAccountId, setViewAccountId] = useState(null);
 
   function loadList() {
@@ -61,7 +67,11 @@ export default function Tasks() {
     return api.get("/clients").then((r) => setClients(r.data));
   }
 
-  useEffect(() => { loadList(); loadClients(); }, []);
+  function loadReports() {
+    return api.get("/reports").then((r) => setReports(r.data));
+  }
+
+  useEffect(() => { loadList(); loadClients(); loadReports(); }, []);
 
   async function openDetail(id) {
     const r = await api.get(`/tasks/${id}`);
@@ -190,6 +200,62 @@ export default function Tasks() {
     await persistClientId(r.data.id);
   }
 
+  async function persistReportId(reportId) {
+    const r = await api.put(`/tasks/${detail.id}`, { report_id: reportId });
+    setDetail(r.data);
+  }
+
+  function handleReportSelect(e) {
+    const v = e.target.value;
+    if (v === "__new__") {
+      setNewReportName("");
+      setCreatingReport(true);
+      return;
+    }
+    persistReportId(v ? Number(v) : null);
+  }
+
+  async function handleCreateReport() {
+    const name = newReportName.trim();
+    if (!name) return;
+    const r = await api.post("/reports", { name });
+    setReports((prev) => [...prev, r.data].sort((a, b) => a.name.localeCompare(b.name)));
+    setCreatingReport(false);
+    await persistReportId(r.data.id);
+  }
+
+  async function refreshAfterCatalogChange() {
+    await Promise.all([loadClients(), loadReports(), loadList()]);
+    if (detail) {
+      const r = await api.get(`/tasks/${detail.id}`);
+      setDetail(r.data);
+    }
+  }
+
+  async function handleRenameClient(client, name) {
+    await api.put(`/clients/${client.id}`, { name });
+    await refreshAfterCatalogChange();
+  }
+
+  async function handleDeleteClient(client) {
+    if (!confirm("¿Eliminar este cliente? Las tareas que lo tenían quedarán sin asignar."))
+      return;
+    await api.delete(`/clients/${client.id}`);
+    await refreshAfterCatalogChange();
+  }
+
+  async function handleRenameReport(report, name) {
+    await api.put(`/reports/${report.id}`, { name });
+    await refreshAfterCatalogChange();
+  }
+
+  async function handleDeleteReport(report) {
+    if (!confirm("¿Eliminar este informe? Las tareas que lo tenían quedarán sin asignar."))
+      return;
+    await api.delete(`/reports/${report.id}`);
+    await refreshAfterCatalogChange();
+  }
+
   const deviceOptions = detail
     ? [...new Map(detail.rows.filter((r) => r.device_id != null).map((r) => [r.device_id, r.device_label])).entries()]
     : [];
@@ -217,6 +283,8 @@ export default function Tasks() {
     if (listSearch && !(t.link || "").toLowerCase().includes(listSearch.toLowerCase())) return false;
     if (clientFilter === "none" && t.client_id != null) return false;
     if (clientFilter && clientFilter !== "none" && String(t.client_id) !== clientFilter) return false;
+    if (reportFilter === "none" && t.report_id != null) return false;
+    if (reportFilter && reportFilter !== "none" && String(t.report_id) !== reportFilter) return false;
     return true;
   });
 
@@ -241,6 +309,15 @@ export default function Tasks() {
               <option value="none">Sin cliente</option>
               {clients.map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
             </select>
+            <select className="input w-auto" value={reportFilter} onChange={(e) => setReportFilter(e.target.value)}>
+              <option value="">Todos los informes</option>
+              <option value="none">Sin informe</option>
+              {reports.map((r) => <option key={r.id} value={String(r.id)}>{r.name}</option>)}
+            </select>
+            <button type="button" className="btn-ghost text-sm px-2" title="Gestionar catálogos"
+              onClick={() => setManagingCatalogs(true)}>
+              ⚙️
+            </button>
           </div>
 
           <div className="card divide-y divide-hive-border">
@@ -261,6 +338,9 @@ export default function Tasks() {
                     </span>
                     <span className={`chip shrink-0 ${t.client_name ? "bg-hive-panel2 text-hive-text" : "bg-hive-panel2 text-hive-muted"}`}>
                       {t.client_name || "Sin cliente"}
+                    </span>
+                    <span className={`chip shrink-0 ${t.report_name ? "bg-hive-panel2 text-hive-text" : "bg-hive-panel2 text-hive-muted"}`}>
+                      {t.report_name || "Sin informe"}
                     </span>
                     <button type="button"
                       className={`btn-ghost text-xs px-2 py-1.5 shrink-0 ${hasComment ? "text-hive-accent" : "text-hive-muted"}`}
@@ -340,6 +420,18 @@ export default function Tasks() {
                 <option value="__new__">+ Nuevo cliente</option>
               </select>
             </div>
+            <div className="w-56">
+              <label className="label mb-1">Número de informe</label>
+              <select className="input" value={detail.report_id ?? ""} onChange={handleReportSelect}>
+                <option value="">Sin informe</option>
+                {reports.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                <option value="__new__">+ Nuevo informe</option>
+              </select>
+            </div>
+            <button type="button" className="btn-ghost" title="Gestionar catálogos"
+              onClick={() => setManagingCatalogs(true)}>
+              ⚙️
+            </button>
             <button className="btn-ghost" onClick={handleResetChecklist}>
               Reiniciar checklist
             </button>
@@ -352,6 +444,16 @@ export default function Tasks() {
                 onKeyDown={(e) => { if (e.key === "Enter") handleCreateClient(); }} />
               <button className="btn-primary" onClick={handleCreateClient}>Crear</button>
               <button className="btn-ghost" onClick={() => setCreatingClient(false)}>Cancelar</button>
+            </div>
+          )}
+
+          {creatingReport && (
+            <div className="flex items-center gap-2 mb-3">
+              <input className="input flex-1 max-w-xs" autoFocus placeholder="Nombre del nuevo informe…"
+                value={newReportName} onChange={(e) => setNewReportName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreateReport(); }} />
+              <button className="btn-primary" onClick={handleCreateReport}>Crear</button>
+              <button className="btn-ghost" onClick={() => setCreatingReport(false)}>Cancelar</button>
             </div>
           )}
 
@@ -393,6 +495,18 @@ export default function Tasks() {
 
       {viewAccountId && (
         <AccountModal accountId={viewAccountId} onClose={() => setViewAccountId(null)} />
+      )}
+
+      {managingCatalogs && (
+        <CatalogManagerModal
+          clients={clients}
+          reports={reports}
+          onRenameClient={handleRenameClient}
+          onDeleteClient={handleDeleteClient}
+          onRenameReport={handleRenameReport}
+          onDeleteReport={handleDeleteReport}
+          onClose={() => setManagingCatalogs(false)}
+        />
       )}
     </div>
   );

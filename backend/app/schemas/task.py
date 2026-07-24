@@ -40,6 +40,8 @@ class TaskDetail(BaseModel):
     force_completed: bool = False
     client_id: int | None = None
     client_name: str | None = None
+    report_id: int | None = None
+    report_name: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
     summary: TaskSummary
@@ -59,3 +61,5 @@ class TaskHistoryItem(BaseModel):
     display_percent: int   # 100 si force_completed, si no el % real (completed_count/total_count)
     client_id: int | None = None
     client_name: str | None = None
+    report_id: int | None = None
+    report_name: str | None = None

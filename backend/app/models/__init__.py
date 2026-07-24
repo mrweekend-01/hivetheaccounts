@@ -10,6 +10,7 @@ from app.models.task_action import TaskAction
 from app.models.humanization_schedule import HumanizationSchedule
 from app.models.urgent_task import UrgentTask
 from app.models.client import Client
+from app.models.report import Report
 
 __all__ = ["Base", "User", "Proxy", "Device", "Account", "SocialAccount", "AppSettings",
-          "Task", "TaskAction", "HumanizationSchedule", "UrgentTask", "Client"]
+          "Task", "TaskAction", "HumanizationSchedule", "UrgentTask", "Client", "Report"]
